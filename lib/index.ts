@@ -26,37 +26,35 @@ export default class VisualRegressionTracker {
       })
       .catch(function (error) {
         // handle error
-        console.log(error);
+        return Promise.reject(error);
       });
   }
 
-  async submitTestResult(test: Test): Promise<Build> {
-    const requestOptions = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(test),
-    };
+  async submitTestResult(test: Test): Promise<TestResult> {
     return axios
-      .post(
-        `${this.config.apiUrl}/tests`,
-        JSON.stringify(test),
-        this.axiosConfig
-      )
-      .then(handleResponse);
+      .post(`${this.config.apiUrl}/tests`, test, this.axiosConfig)
+      .then(function (response) {
+        // handle success
+        return response.data;
+      })
+      .catch(function (error) {
+        // handle error
+        return Promise.reject(error);
+      });
   }
 }
 
-function handleResponse(response: AxiosResponse) {
-  return response.data.then((text: string) => {
-    const data = text && JSON.parse(text);
-    if (response.status !== 200) {
-      const error = (data && data.message) || response.statusText;
-      return Promise.reject(error);
-    }
+// function handleResponse(response: AxiosResponse) {
+//   return response.data.then((text: string) => {
+//     const data = text && JSON.parse(text);
+//     if (response.status !== 200) {
+//       const error = (data && data.message) || response.statusText;
+//       return Promise.reject(error);
+//     }
 
-    return data;
-  });
-}
+//     return data;
+//   });
+// }
 
 interface Test {
   name: string;
@@ -66,4 +64,10 @@ interface Test {
   browser: string;
   viewport: string;
   device: string;
+}
+
+interface TestResult {
+  url: string;
+  status: string;
+  pixelMisMatchCount: number;
 }
