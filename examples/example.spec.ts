@@ -6,22 +6,16 @@ describe("asd", () => {
   const config: Config = {
     apiUrl: "http://localhost:4200",
     branchName: "develop",
-    projectId: 1,
-    token: "8ACNWG97YGMZBRP3JJM0EY66KX2F",
+    projectId: "a6a5cc4e-07ef-44d1-ab44-a636465ca880",
+    token: "4H9S6YHFJYMG7QQNJXPJQVDG0QMV",
   };
   const vrt = new VisualRegressionTracker(config);
-  let buildId: number;
 
-  beforeAll(async () => {
-    const build = await vrt.startBuild(config.projectId, config.branchName);
-    buildId = Number.parseInt(build.id);
-  });
-
-  it("test", async () => {
+  it("test 2", async () => {
     const testResult = await vrt.submitTestResult({
-      name: "Example",
-      buildId: buildId,
-      imageBase64: new Buffer(readFileSync("examples/2.png")).toString(
+      name: "Example 2",
+      // buildId: buildId,
+      imageBase64: new Buffer(readFileSync("examples/1.png")).toString(
         "base64"
       ),
       os: "Windows",
@@ -33,17 +27,31 @@ describe("asd", () => {
     console.log(testResult);
   });
 
-  it("test", async () => {
+  it("test 1", async () => {
     const testResult = await vrt.submitTestResult({
-      name: "Example",
-      buildId: buildId,
+      name: "Example 1",
+      imageBase64: new Buffer(readFileSync("examples/1.png")).toString(
+        "base64"
+      ),
+      os: "Windows",
+      // browser: "Chrome",
+      // viewport: "800x600",
+      // device: "PC",
+    });
+
+    console.log(testResult);
+  });
+
+  it("test 1 chrome", async () => {
+    const testResult = await vrt.submitTestResult({
+      name: "Example 1",
       imageBase64: new Buffer(readFileSync("examples/1.png")).toString(
         "base64"
       ),
       os: "Windows",
       browser: "Chrome",
-      viewport: "800x600",
-      device: "PC",
+      // viewport: "800x600",
+      // device: "PC",
     });
 
     console.log(testResult);

@@ -1,10 +1,12 @@
 import Config from "./types/config";
 import Build from "./types/build";
-import axios, { AxiosResponse, AxiosRequestConfig } from "axios";
+import axios, { AxiosRequestConfig } from "axios";
+import { TestRun } from "types/testRun";
+import { TestRunResult } from "types/testRunResult";
 
 export default class VisualRegressionTracker {
   config: Config;
-  buildId: number = 0;
+  buildId: string | undefined;
   axiosConfig: AxiosRequestConfig;
 
   constructor(config: Config) {
@@ -16,10 +18,29 @@ export default class VisualRegressionTracker {
     };
   }
 
-  async startBuild(projectId: number, branchName: string): Promise<Build> {
-    const data = { branchName, projectId };
+  private async startBuild(projectId: string, branchName: string) {
+    if (!this.buildId) {
+      console.log("Starting new build")
+      const data = { branchName, projectId };
+      const build = await axios
+        .post<Build>(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
+        .then(function (response) {
+          // handle success
+          return response.data;
+        })
+        .catch(function (error) {
+          // handle error
+          return Promise.reject(error);
+        });
+      this.buildId = build.id;
+    }
+  }
+
+  async submitTestResult(test: TestRun): Promise<TestRunResult> {
+    await this.startBuild(this.config.projectId, this.config.branchName);
+    const data = { buildId: this.buildId, ...test };
     return axios
-      .post(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
+      .post(`${this.config.apiUrl}/test`, data, this.axiosConfig)
       .then(function (response) {
         // handle success
         return response.data;
@@ -29,45 +50,4 @@ export default class VisualRegressionTracker {
         return Promise.reject(error);
       });
   }
-
-  async submitTestResult(test: Test): Promise<TestResult> {
-    return axios
-      .post(`${this.config.apiUrl}/tests`, test, this.axiosConfig)
-      .then(function (response) {
-        // handle success
-        return response.data;
-      })
-      .catch(function (error) {
-        // handle error
-        return Promise.reject(error);
-      });
-  }
-}
-
-// function handleResponse(response: AxiosResponse) {
-//   return response.data.then((text: string) => {
-//     const data = text && JSON.parse(text);
-//     if (response.status !== 200) {
-//       const error = (data && data.message) || response.statusText;
-//       return Promise.reject(error);
-//     }
-
-//     return data;
-//   });
-// }
-
-interface Test {
-  name: string;
-  buildId: number;
-  imageBase64: string;
-  os: string;
-  browser: string;
-  viewport: string;
-  device: string;
-}
-
-interface TestResult {
-  url: string;
-  status: string;
-  pixelMisMatchCount: number;
 }

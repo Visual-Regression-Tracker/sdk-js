@@ -1,6 +1,6 @@
 export default interface Config {
   apiUrl: string;
   branchName: string;
-  projectId: number;
+  projectId: string;
   token: string;
 }
