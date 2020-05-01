@@ -6,7 +6,7 @@ describe("asd", () => {
   const config: Config = {
     apiUrl: "http://localhost:4200",
     branchName: "develop",
-    projectId: "130b8192-dad2-4f6a-8a3c-c533d6dbbd9f",
+    projectId: "a24d7549-26be-4545-8cad-ad76325bab86",
     token: "4H9S6YHFJYMG7QQNJXPJQVDG0QMV",
   };
   const vrt = new VisualRegressionTracker(config);
@@ -15,13 +15,14 @@ describe("asd", () => {
     const testResult = await vrt.submitTestResult({
       name: "Example 2",
       // buildId: buildId,
-      imageBase64: new Buffer(readFileSync("examples/1.png")).toString(
+      imageBase64: new Buffer(readFileSync("examples/2.png")).toString(
         "base64"
       ),
       os: "Windows",
       browser: "Chrome",
       viewport: "800x600",
       device: "PC",
+      diffTollerancePercent: 0,
     });
 
     console.log(testResult);
@@ -52,6 +53,7 @@ describe("asd", () => {
       browser: "Chrome",
       // viewport: "800x600",
       // device: "PC",
+      diffTollerancePercent: 10.5,
     });
 
     console.log(testResult);

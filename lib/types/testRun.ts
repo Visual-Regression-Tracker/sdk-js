@@ -5,4 +5,5 @@ export interface TestRun {
   browser?: string;
   viewport?: string;
   device?: string;
+  diffTollerancePercent?: number;
 }
