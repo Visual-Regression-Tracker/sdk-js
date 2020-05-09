@@ -1,17 +1,17 @@
-import { VisualRegressionTracker, Config } from "../";
+import { VisualRegressionTracker, Config } from "../lib";
 import { readFileSync } from "fs";
 
 describe("asd", () => {
   const config: Config = {
     apiUrl: "http://localhost:4200",
     branchName: "develop",
-    projectId: "a93c0341-cf31-48cf-a067-240e214ee39b",
-    token: "3W7TJCZR2H4ADSM76Q1VYMBYVCA2",
+    projectId: "76f0c443-9811-4f4f-b1c2-7c01c5775d9a",
+    token: "F5Z2H0H2SNMXZVHX0EA4YQM1MGDD",
   };
   const vrt = new VisualRegressionTracker(config);
 
   it("test 2", async () => {
-    const testResult = await vrt.submitTestResult({
+    const testResult = await vrt.track({
       name: "Example 2",
       // buildId: buildId,
       imageBase64: new Buffer(readFileSync("examples/1.png")).toString(
@@ -28,7 +28,7 @@ describe("asd", () => {
   });
 
   it("test 1", async () => {
-    const testResult = await vrt.submitTestResult({
+    const testResult = await vrt.track({
       name: "Example 1",
       imageBase64: new Buffer(readFileSync("examples/1.png")).toString(
         "base64"
@@ -43,7 +43,7 @@ describe("asd", () => {
   });
 
   it("test 1 chrome", async () => {
-    const testResult = await vrt.submitTestResult({
+    const testResult = await vrt.track({
       name: "Example 1",
       imageBase64: new Buffer(readFileSync("examples/1.png")).toString(
         "base64"
