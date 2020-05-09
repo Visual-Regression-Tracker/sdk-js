@@ -1,10 +1,7 @@
-import Config from "./types/config";
-import Build from "./types/build";
+import { Config, Build, TestRun, TestRunResult } from "./types";
 import axios, { AxiosRequestConfig } from "axios";
-import { TestRun } from "types/testRun";
-import { TestRunResult } from "types/testRunResult";
 
-export default class VisualRegressionTracker {
+export class VisualRegressionTracker {
   config: Config;
   buildId: string | undefined;
   axiosConfig: AxiosRequestConfig;
