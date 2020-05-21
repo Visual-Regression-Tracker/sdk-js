@@ -1,6 +1,6 @@
 {
   "name": "@visual-regression-tracker/sdk-js",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -17,7 +17,7 @@
   "bugs": {
     "url": "https://github.com/Visual-Regression-Tracker/vrt-sdk-js/issues"
   },
-  "homepage": "https://github.com/Visual-Regression-Tracker/vrt-sdk-js#readme",
+  "homepage": "https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker",
   "dependencies": {
     "axios": "^0.19.2"
   },
