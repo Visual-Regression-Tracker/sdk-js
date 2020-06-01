@@ -10,7 +10,7 @@ export class VisualRegressionTracker {
         this.config = config;
         this.axiosConfig = {
             headers: {
-                apiKey: this.config.token,
+                apiKey: this.config.apiKey,
             },
         };
     }
