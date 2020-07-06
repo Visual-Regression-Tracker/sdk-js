@@ -1,3 +1,4 @@
 export interface Build {
-    id: string,
+  id: string;
+  projectId: string;
 }

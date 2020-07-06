@@ -23,11 +23,14 @@ class VisualRegressionTracker {
             },
         };
     }
-    startBuild(projectId, branchName) {
+    startBuild(project, branchName) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.buildId) {
                 console.log("Starting new build");
-                const data = { branchName, projectId };
+                const data = {
+                    branchName,
+                    project,
+                };
                 const build = yield axios_1.default
                     .post(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
                     .then(function (response) {
@@ -39,12 +42,13 @@ class VisualRegressionTracker {
                     return Promise.reject(error);
                 });
                 this.buildId = build.id;
+                this.projectId = build.projectId;
             }
         });
     }
     submitTestResult(test) {
         return __awaiter(this, void 0, void 0, function* () {
-            const data = Object.assign({ buildId: this.buildId, projectId: this.config.projectId }, test);
+            const data = Object.assign({ buildId: this.buildId, projectId: this.projectId }, test);
             return axios_1.default
                 .post(`${this.config.apiUrl}/test`, data, this.axiosConfig)
                 .then(function (response) {
@@ -59,7 +63,7 @@ class VisualRegressionTracker {
     }
     track(test) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.startBuild(this.config.projectId, this.config.branchName);
+            yield this.startBuild(this.config.project, this.config.branchName);
             const result = yield this.submitTestResult(test);
             if (result.status === types_1.TestRunStatus.new) {
                 throw new Error(`No baseline: ${result.url}`);
