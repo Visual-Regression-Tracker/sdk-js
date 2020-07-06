@@ -5,8 +5,8 @@ describe("asd", () => {
   const config: Config = {
     apiUrl: "http://localhost:4200",
     branchName: "develop",
-    projectId: "76f0c443-9811-4f4f-b1c2-7c01c5775d9a",
-    apiKey: "F5Z2H0H2SNMXZVHX0EA4YQM1MGDD",
+    project: "Test",
+    apiKey: "GG54SCFYW0MDK1KWQ8WH3FAZK4RN",
   };
   const vrt = new VisualRegressionTracker(config);
 
