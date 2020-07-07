@@ -45,7 +45,7 @@ export class VisualRegressionTracker {
       ...test,
     };
     return axios
-      .post(`${this.config.apiUrl}/test`, data, this.axiosConfig)
+      .post(`${this.config.apiUrl}/test-runs`, data, this.axiosConfig)
       .then(function (response) {
         // handle success
         return response.data;

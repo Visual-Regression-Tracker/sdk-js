@@ -10,29 +10,25 @@
 import { VisualRegressionTracker, Config } from '@visual-regression-tracker/sdk-js'
 ```
 ### Configure connection
-```js
+```
 const config: Config = {
-    // URL where backend is running 
-    // Required
+    // Fill with your data
     apiUrl: "http://localhost:4200",
 
-    // Current git branch 
-    // Required
+    // Fill with your data
     branchName: "develop",
 
-    // Project name or ID
-    // Required
-    project: "Demo project",
+    // Fill with your data
+    projectId: "76f0c443-9811-4f4f-b1c2-7c01c5775d9a",
 
-    // User apiKey
-    // Required
-    apiKey: "F5Z2H0H2SNMXZVHX0EA4YQM1MGDD",
+    // Fill with your data
+    apiKey: "tXZVHX0EA4YQM1MGDD",
 };
 
 const vrt = new VisualRegressionTracker(config);
 ```
 ### Send image
-```js
+```
 await vrt.track({
     // Name to be displayed
     // Required
