@@ -4,9 +4,9 @@ import { readFileSync } from "fs";
 describe("asd", () => {
   const config: Config = {
     apiUrl: "http://localhost:4200",
-    branchName: "develop",
+    branchName: "master",
     project: "Test",
-    apiKey: "GG54SCFYW0MDK1KWQ8WH3FAZK4RN",
+    apiKey: "RE85600GVC4A2WHZYR4Z4HA1NFDT",
   };
   const vrt = new VisualRegressionTracker(config);
 
@@ -30,7 +30,7 @@ describe("asd", () => {
   it("test 1", async () => {
     const testResult = await vrt.track({
       name: "Example 1",
-      imageBase64: new Buffer(readFileSync("examples/1.png")).toString(
+      imageBase64: new Buffer(readFileSync("examples/2.png")).toString(
         "base64"
       ),
       os: "Windows",

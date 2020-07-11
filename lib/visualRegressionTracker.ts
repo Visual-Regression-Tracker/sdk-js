@@ -16,12 +16,12 @@ export class VisualRegressionTracker {
     };
   }
 
-  private async startBuild(project: string, branchName: string) {
+  private async startBuild() {
     if (!this.buildId) {
       console.log("Starting new build");
       const data = {
-        branchName,
-        project,
+        branchName: this.config.branchName,
+        project: this.config.project,
       };
       const build = await axios
         .post<Build>(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
@@ -42,6 +42,7 @@ export class VisualRegressionTracker {
     const data = {
       buildId: this.buildId,
       projectId: this.projectId,
+      branchName: this.config.branchName,
       ...test,
     };
     return axios
@@ -57,7 +58,7 @@ export class VisualRegressionTracker {
   }
 
   async track(test: TestRun) {
-    await this.startBuild(this.config.project, this.config.branchName);
+    await this.startBuild();
 
     const result = await this.submitTestResult(test);
 
