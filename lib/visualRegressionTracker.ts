@@ -1,5 +1,5 @@
 import { Config, Build, TestRun, TestRunResult, TestRunStatus } from "./types";
-import axios, { AxiosRequestConfig } from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
 export class VisualRegressionTracker {
   config: Config;
@@ -18,23 +18,26 @@ export class VisualRegressionTracker {
 
   private async startBuild() {
     if (!this.buildId) {
-      console.log("Starting new build");
       const data = {
         branchName: this.config.branchName,
         project: this.config.project,
       };
-      const build = await axios
-        .post<Build>(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
-        .then(function (response) {
-          // handle success
-          return response.data;
-        })
-        .catch(function (error) {
-          // handle error
-          return Promise.reject(error);
-        });
-      this.buildId = build.id;
-      this.projectId = build.projectId;
+
+      const build: Build = await axios
+        .post(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
+        .then(this.handleResponse)
+        .catch(this.handleException);
+
+      if (build.id) {
+        this.buildId = build.id;
+      } else {
+        throw new Error("Build id is not defined");
+      }
+      if (build.projectId) {
+        this.projectId = build.projectId;
+      } else {
+        throw new Error("Project id is not defined");
+      }
     }
   }
 
@@ -45,16 +48,30 @@ export class VisualRegressionTracker {
       branchName: this.config.branchName,
       ...test,
     };
+
     return axios
       .post(`${this.config.apiUrl}/test-runs`, data, this.axiosConfig)
-      .then(function (response) {
-        // handle success
-        return response.data;
-      })
-      .catch(function (error) {
-        // handle error
-        return Promise.reject(error);
-      });
+      .then(this.handleResponse)
+      .catch(this.handleException);
+  }
+
+  private async handleResponse(response: AxiosResponse) {
+    return response.data;
+  }
+
+  private async handleException(error: AxiosError) {
+    const status = error.response?.status;
+    if (status === 401) {
+      return Promise.reject("Unauthorized");
+    }
+    if (status === 403) {
+      return Promise.reject("Api key not authenticated");
+    }
+    if (status === 404) {
+      return Promise.reject("Project not found");
+    }
+
+    return Promise.reject(error.message);
   }
 
   async track(test: TestRun) {

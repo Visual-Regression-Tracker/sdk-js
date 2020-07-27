@@ -1,2 +1,2 @@
-export * from './visualRegressionTracker'
-export * from './types'
+export * from "./visualRegressionTracker";
+export * from "./types";
