@@ -1,5 +1,5 @@
 export enum TestRunStatus {
-    new = 'new',
-    ok = 'ok',
-    unresolved = 'unresolved',
+  new = "new",
+  ok = "ok",
+  unresolved = "unresolved",
 }
