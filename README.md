@@ -43,7 +43,6 @@ await vrt.track({
 
     // Allowed mismatch tollerance in %
     // Optional
-    // Default: 1%
     diffTollerancePercent: 0,
 
     // Optional
