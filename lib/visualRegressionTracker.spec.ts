@@ -6,6 +6,66 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 jest.mock("axios");
 const mockedAxios = mocked(axios, true);
 
+const axiosError404: AxiosError = {
+  isAxiosError: true,
+  config: {},
+  toJSON: jest.fn(),
+  name: "",
+  message: "",
+  response: {
+    status: 404,
+    data: {},
+    statusText: "Not found",
+    headers: {},
+    config: {},
+  },
+};
+
+const axiosError403: AxiosError = {
+  isAxiosError: true,
+  config: {},
+  toJSON: jest.fn(),
+  name: "",
+  message: "",
+  response: {
+    status: 403,
+    data: {},
+    statusText: "Not found",
+    headers: {},
+    config: {},
+  },
+};
+
+const axiosError401: AxiosError = {
+  isAxiosError: true,
+  config: {},
+  toJSON: jest.fn(),
+  name: "",
+  message: "",
+  response: {
+    status: 401,
+    data: {},
+    statusText: "Unauthorized",
+    headers: {},
+    config: {},
+  },
+};
+
+const axiosErrorUnknown: AxiosError = {
+  isAxiosError: true,
+  config: {},
+  toJSON: jest.fn(),
+  name: "asdas",
+  message: "Unknown error",
+  response: {
+    status: 500,
+    data: {},
+    statusText: "Internal exception",
+    headers: {},
+    config: {},
+  },
+};
+
 describe("VisualRegressionTracker", () => {
   let vrt: VisualRegressionTracker;
   const config: Config = {
@@ -17,10 +77,6 @@ describe("VisualRegressionTracker", () => {
 
   beforeEach(async () => {
     vrt = new VisualRegressionTracker(config);
-  });
-
-  afterEach(async () => {
-    mockedAxios.post.mockReset();
   });
 
   describe("track", () => {
@@ -41,12 +97,12 @@ describe("VisualRegressionTracker", () => {
         diffPercent: 0.12,
         diffTollerancePercent: 0,
       };
-      vrt["startBuild"] = jest.fn();
+      vrt["start"] = jest.fn();
       vrt["submitTestResult"] = jest.fn().mockResolvedValueOnce(testRunResult);
 
       await vrt.track(testRun);
 
-      expect(vrt["startBuild"]).toHaveBeenCalled();
+      expect(vrt["start"]).toHaveBeenCalled();
       expect(vrt["submitTestResult"]).toHaveBeenCalledWith(testRun);
     });
 
@@ -58,7 +114,7 @@ describe("VisualRegressionTracker", () => {
         diffPercent: 0.12,
         diffTollerancePercent: 0,
       };
-      vrt["startBuild"] = jest.fn();
+      vrt["start"] = jest.fn();
       vrt["submitTestResult"] = jest.fn().mockResolvedValueOnce(testRunResult);
 
       await expect(vrt.track(testRun)).rejects.toThrowError(
@@ -67,24 +123,24 @@ describe("VisualRegressionTracker", () => {
     });
 
     it("should track difference", async () => {
-        const testRunResult: TestRunResult = {
-          url: "url",
-          status: TestRunStatus.unresolved,
-          pixelMisMatchCount: 12,
-          diffPercent: 0.12,
-          diffTollerancePercent: 0,
-        };
-        vrt["startBuild"] = jest.fn();
-        vrt["submitTestResult"] = jest.fn().mockResolvedValueOnce(testRunResult);
-  
-        await expect(vrt.track(testRun)).rejects.toThrowError(
-          new Error("Difference found: " + testRunResult.url)
-        );
-      });
+      const testRunResult: TestRunResult = {
+        url: "url",
+        status: TestRunStatus.unresolved,
+        pixelMisMatchCount: 12,
+        diffPercent: 0.12,
+        diffTollerancePercent: 0,
+      };
+      vrt["start"] = jest.fn();
+      vrt["submitTestResult"] = jest.fn().mockResolvedValueOnce(testRunResult);
+
+      await expect(vrt.track(testRun)).rejects.toThrowError(
+        new Error("Difference found: " + testRunResult.url)
+      );
+    });
   });
 
-  describe("startBuild", () => {
-    test("shouldStartBuild", async () => {
+  describe("start", () => {
+    test("should start build", async () => {
       const buildId = "1312";
       const projectId = "asd";
       const build: Build = {
@@ -93,7 +149,7 @@ describe("VisualRegressionTracker", () => {
       };
       mockedAxios.post.mockResolvedValueOnce({ data: build });
 
-      await vrt["startBuild"]();
+      await vrt["start"]();
 
       expect(mockedAxios.post).toHaveBeenCalledWith(
         `${config.apiUrl}/builds`,
@@ -118,7 +174,7 @@ describe("VisualRegressionTracker", () => {
       };
       mockedAxios.post.mockResolvedValueOnce({ data: build });
 
-      await expect(vrt["startBuild"]()).rejects.toThrowError(
+      await expect(vrt["start"]()).rejects.toThrowError(
         new Error("Build id is not defined")
       );
     });
@@ -130,35 +186,60 @@ describe("VisualRegressionTracker", () => {
       };
       mockedAxios.post.mockResolvedValueOnce({ data: build });
 
-      await expect(vrt["startBuild"]()).rejects.toThrowError(
+      await expect(vrt["start"]()).rejects.toThrowError(
         new Error("Project id is not defined")
       );
     });
 
     test("should handle exception", async () => {
-      const error: AxiosError = {
-        isAxiosError: true,
-        config: {},
-        toJSON: jest.fn(),
-        name: "",
-        message: "",
-        response: {
-          status: 404,
-          data: {},
-          statusText: "Not found",
-          headers: {},
-          config: {},
-        },
-      };
       const handleExceptionMock = jest.fn();
       vrt["handleException"] = handleExceptionMock;
-      mockedAxios.post.mockRejectedValueOnce(error);
+      mockedAxios.post.mockRejectedValueOnce(axiosError401);
 
       try {
-        await vrt["startBuild"]();
+        await vrt["start"]();
       } catch {}
 
-      expect(handleExceptionMock).toHaveBeenCalledWith(error);
+      expect(handleExceptionMock).toHaveBeenCalledWith(axiosError401);
+    });
+  });
+
+  describe("stop", () => {
+    test("should stop build", async () => {
+      const buildId = "1312";
+      vrt.buildId = buildId;
+      mockedAxios.patch.mockResolvedValueOnce({});
+
+      await vrt["stop"]();
+
+      expect(mockedAxios.patch).toHaveBeenCalledWith(
+        `${config.apiUrl}/builds/${buildId}`,
+        {},
+        {
+          headers: {
+            apiKey: config.apiKey,
+          },
+        }
+      );
+    });
+
+    test("should throw if no build Id", async () => {
+      await expect(vrt["stop"]()).rejects.toThrowError(
+        new Error("Build is not started yet")
+      );
+    });
+
+    test("should handle exception", async () => {
+      vrt.buildId = "some id";
+      const handleExceptionMock = jest.fn();
+      vrt["handleException"] = handleExceptionMock;
+      mockedAxios.patch.mockRejectedValueOnce(axiosError401);
+
+      try {
+        await vrt["stop"]();
+      } catch {}
+
+      expect(handleExceptionMock).toHaveBeenCalledWith(axiosError401);
     });
   });
 
@@ -210,23 +291,9 @@ describe("VisualRegressionTracker", () => {
     });
 
     it("should handle exception", async () => {
-      const error: AxiosError = {
-        isAxiosError: true,
-        config: {},
-        toJSON: jest.fn(),
-        name: "",
-        message: "",
-        response: {
-          status: 404,
-          data: {},
-          statusText: "Not found",
-          headers: {},
-          config: {},
-        },
-      };
       const handleExceptionMock = jest.fn();
       vrt["handleException"] = handleExceptionMock;
-      mockedAxios.post.mockRejectedValueOnce(error);
+      mockedAxios.post.mockRejectedValueOnce(axiosError401);
 
       try {
         await vrt["submitTestResult"]({
@@ -235,7 +302,7 @@ describe("VisualRegressionTracker", () => {
         });
       } catch {}
 
-      expect(handleExceptionMock).toHaveBeenCalledWith(error);
+      expect(handleExceptionMock).toHaveBeenCalledWith(axiosError401);
     });
   });
 
@@ -259,83 +326,27 @@ describe("VisualRegressionTracker", () => {
 
   describe("handleException", () => {
     it("error 401", async () => {
-      const error: AxiosError = {
-        isAxiosError: true,
-        config: {},
-        toJSON: jest.fn(),
-        name: "",
-        message: "",
-        response: {
-          status: 401,
-          data: {},
-          statusText: "",
-          headers: {},
-          config: {},
-        },
-      };
-
-      await expect(vrt["handleException"](error)).rejects.toBe("Unauthorized");
+      await expect(vrt["handleException"](axiosError401)).rejects.toBe(
+        "Unauthorized"
+      );
     });
 
     it("error 403", async () => {
-      const error: AxiosError = {
-        isAxiosError: true,
-        config: {},
-        toJSON: jest.fn(),
-        name: "",
-        message: "",
-        response: {
-          status: 403,
-          data: {},
-          statusText: "",
-          headers: {},
-          config: {},
-        },
-      };
-
-      await expect(vrt["handleException"](error)).rejects.toBe(
+      await expect(vrt["handleException"](axiosError403)).rejects.toBe(
         "Api key not authenticated"
       );
     });
 
     it("error 404", async () => {
-      const error: AxiosError = {
-        isAxiosError: true,
-        config: {},
-        toJSON: jest.fn(),
-        name: "",
-        message: "",
-        response: {
-          status: 404,
-          data: {},
-          statusText: "",
-          headers: {},
-          config: {},
-        },
-      };
-
-      await expect(vrt["handleException"](error)).rejects.toBe(
+      await expect(vrt["handleException"](axiosError404)).rejects.toBe(
         "Project not found"
       );
     });
 
     it("unknown", async () => {
-      const error: AxiosError = {
-        isAxiosError: true,
-        config: {},
-        toJSON: jest.fn(),
-        name: "asdas",
-        message: "Unknown error",
-        response: {
-          status: 500,
-          data: {},
-          statusText: "Internal exception",
-          headers: {},
-          config: {},
-        },
-      };
-
-      await expect(vrt["handleException"](error)).rejects.toBe(error.message);
+      await expect(vrt["handleException"](axiosErrorUnknown)).rejects.toBe(
+        axiosErrorUnknown.message
+      );
     });
   });
 });

@@ -16,29 +16,46 @@ export class VisualRegressionTracker {
     };
   }
 
-  private async startBuild() {
-    if (!this.buildId) {
-      const data = {
-        branchName: this.config.branchName,
-        project: this.config.project,
-      };
-
-      const build: Build = await axios
-        .post(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
-        .then(this.handleResponse)
-        .catch(this.handleException);
-
-      if (build.id) {
-        this.buildId = build.id;
-      } else {
-        throw new Error("Build id is not defined");
-      }
-      if (build.projectId) {
-        this.projectId = build.projectId;
-      } else {
-        throw new Error("Project id is not defined");
-      }
+  async start() {
+    if (this.buildId) {
+      return;
     }
+
+    const data = {
+      branchName: this.config.branchName,
+      project: this.config.project,
+    };
+
+    const build: Build = await axios
+      .post(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
+      .then(this.handleResponse)
+      .catch(this.handleException);
+
+    if (build.id) {
+      this.buildId = build.id;
+    } else {
+      throw new Error("Build id is not defined");
+    }
+    if (build.projectId) {
+      this.projectId = build.projectId;
+    } else {
+      throw new Error("Project id is not defined");
+    }
+  }
+
+  async stop() {
+    if (!this.buildId) {
+      throw new Error("Build is not started yet");
+    }
+
+    await axios
+      .patch(
+        `${this.config.apiUrl}/builds/${this.buildId}`,
+        {},
+        this.axiosConfig
+      )
+      .then(this.handleResponse)
+      .catch(this.handleException);
   }
 
   private async submitTestResult(test: TestRun): Promise<TestRunResult> {
@@ -75,7 +92,7 @@ export class VisualRegressionTracker {
   }
 
   async track(test: TestRun) {
-    await this.startBuild();
+    await this.start();
 
     const result = await this.submitTestResult(test);
 
