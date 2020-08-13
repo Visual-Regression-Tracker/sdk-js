@@ -8,53 +8,74 @@
 `npm install @visual-regression-tracker/sdk-js`
 
 ## Usage
+
 ### Import
+
 ```js
-import { VisualRegressionTracker, Config } from '@visual-regression-tracker/sdk-js'
+import {
+  VisualRegressionTracker,
+  Config,
+} from "@visual-regression-tracker/sdk-js";
 ```
+
 ### Configure connection
+
 ```js
 const config: Config = {
-    // apiUrl - URL where backend is running 
-    apiUrl: "http://localhost:4200",
+  // apiUrl - URL where backend is running
+  apiUrl: "http://localhost:4200",
 
-    // project - Project name or ID
-    project: "Default project",
+  // project - Project name or ID
+  project: "Default project",
 
-    // apiKey - User apiKey
-    apiKey: "tXZVHX0EA4YQM1MGDD",
+  // apiKey - User apiKey
+  apiKey: "tXZVHX0EA4YQM1MGDD",
 
-    // branch - Current git branch 
-    branchName: "develop",
+  // branch - Current git branch
+  branchName: "develop",
 };
 
 const vrt = new VisualRegressionTracker(config);
 ```
+
+### Start build
+
+```js
+vrt.start();
+```
+
 ### Send image
+
 ```js
 await vrt.track({
-    // Name to be displayed
-    // Required
-    name: "Image name",
+  // Name to be displayed
+  // Required
+  name: "Image name",
 
-    // Base64 encoded string
-    // Required
-    imageBase64: image,
+  // Base64 encoded string
+  // Required
+  imageBase64: image,
 
-    // Allowed mismatch tollerance in %
-    // Optional
-    diffTollerancePercent: 0,
+  // Allowed mismatch tollerance in %
+  // Optional
+  diffTollerancePercent: 0,
 
-    // Optional
-    os: "Mac",
+  // Optional
+  os: "Mac",
 
-    // Optional
-    browser: "Chrome",
+  // Optional
+  browser: "Chrome",
 
-    // Optional
-    viewport: "800x600",
+  // Optional
+  viewport: "800x600",
 
-    // Optional
-    device: "PC",
+  // Optional
+  device: "PC",
 });
+```
+
+### Stop build
+
+```js
+vrt.stop();
 ```
