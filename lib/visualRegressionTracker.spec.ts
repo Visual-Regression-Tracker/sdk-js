@@ -79,6 +79,22 @@ describe("VisualRegressionTracker", () => {
     vrt = new VisualRegressionTracker(config);
   });
 
+  describe("isStarted", () => {
+    it.each([
+      [undefined, undefined, false],
+      ["some", undefined, false],
+      [undefined, "some", false],
+      ["some", "some", true],
+    ])("should return if started", (buildId, projectId, expectedResult) => {
+      vrt.buildId = buildId;
+      vrt.projectId = projectId;
+
+      const result = vrt["isStarted"]();
+
+      expect(result).toBe(expectedResult);
+    });
+  });
+
   describe("track", () => {
     const testRun: TestRun = {
       name: "name",
@@ -97,12 +113,10 @@ describe("VisualRegressionTracker", () => {
         diffPercent: 0.12,
         diffTollerancePercent: 0,
       };
-      vrt["start"] = jest.fn();
       vrt["submitTestResult"] = jest.fn().mockResolvedValueOnce(testRunResult);
 
       await vrt.track(testRun);
 
-      expect(vrt["start"]).toHaveBeenCalled();
       expect(vrt["submitTestResult"]).toHaveBeenCalledWith(testRun);
     });
 
@@ -114,7 +128,6 @@ describe("VisualRegressionTracker", () => {
         diffPercent: 0.12,
         diffTollerancePercent: 0,
       };
-      vrt["start"] = jest.fn();
       vrt["submitTestResult"] = jest.fn().mockResolvedValueOnce(testRunResult);
 
       await expect(vrt.track(testRun)).rejects.toThrowError(
@@ -130,7 +143,6 @@ describe("VisualRegressionTracker", () => {
         diffPercent: 0.12,
         diffTollerancePercent: 0,
       };
-      vrt["start"] = jest.fn();
       vrt["submitTestResult"] = jest.fn().mockResolvedValueOnce(testRunResult);
 
       await expect(vrt.track(testRun)).rejects.toThrowError(
@@ -167,27 +179,11 @@ describe("VisualRegressionTracker", () => {
       expect(vrt.projectId).toBe(projectId);
     });
 
-    test("should throw if no build Id", async () => {
-      const build = {
-        id: null,
-        projectId: "projectId",
-      };
-      mockedAxios.post.mockResolvedValueOnce({ data: build });
+    test("should throw if already started", async () => {
+      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
 
       await expect(vrt["start"]()).rejects.toThrowError(
-        new Error("Build id is not defined")
-      );
-    });
-
-    test("should throw if no project Id", async () => {
-      const build = {
-        id: "asd",
-        projectId: null,
-      };
-      mockedAxios.post.mockResolvedValueOnce({ data: build });
-
-      await expect(vrt["start"]()).rejects.toThrowError(
-        new Error("Project id is not defined")
+        new Error("Visual Regression Tracker has already been started")
       );
     });
 
@@ -208,6 +204,7 @@ describe("VisualRegressionTracker", () => {
     test("should stop build", async () => {
       const buildId = "1312";
       vrt.buildId = buildId;
+      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
       mockedAxios.patch.mockResolvedValueOnce({});
 
       await vrt["stop"]();
@@ -223,14 +220,17 @@ describe("VisualRegressionTracker", () => {
       );
     });
 
-    test("should throw if no build Id", async () => {
+    test("should throw if not started", async () => {
+      vrt["isStarted"] = jest.fn().mockReturnValueOnce(false);
+
       await expect(vrt["stop"]()).rejects.toThrowError(
-        new Error("Build is not started yet")
+        new Error("Visual Regression Tracker has not been started")
       );
     });
 
     test("should handle exception", async () => {
       vrt.buildId = "some id";
+      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
       const handleExceptionMock = jest.fn();
       vrt["handleException"] = handleExceptionMock;
       mockedAxios.patch.mockRejectedValueOnce(axiosError401);
@@ -290,9 +290,23 @@ describe("VisualRegressionTracker", () => {
       );
     });
 
+    test("should throw if not started", async () => {
+      vrt["isStarted"] = jest.fn().mockReturnValueOnce(false);
+
+      await expect(
+        vrt["submitTestResult"]({
+          name: "name",
+          imageBase64: "image",
+        })
+      ).rejects.toThrowError(
+        new Error("Visual Regression Tracker has not been started")
+      );
+    });
+
     it("should handle exception", async () => {
       const handleExceptionMock = jest.fn();
       vrt["handleException"] = handleExceptionMock;
+      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
       mockedAxios.post.mockRejectedValueOnce(axiosError401);
 
       try {

@@ -16,9 +16,13 @@ export class VisualRegressionTracker {
     };
   }
 
+  private isStarted() {
+    return !!this.buildId && !!this.projectId;
+  }
+
   async start() {
-    if (this.buildId) {
-      return;
+    if (this.isStarted()) {
+      throw new Error("Visual Regression Tracker has already been started");
     }
 
     const data = {
@@ -31,21 +35,13 @@ export class VisualRegressionTracker {
       .then(this.handleResponse)
       .catch(this.handleException);
 
-    if (build.id) {
-      this.buildId = build.id;
-    } else {
-      throw new Error("Build id is not defined");
-    }
-    if (build.projectId) {
-      this.projectId = build.projectId;
-    } else {
-      throw new Error("Project id is not defined");
-    }
+    this.buildId = build.id;
+    this.projectId = build.projectId;
   }
 
   async stop() {
-    if (!this.buildId) {
-      throw new Error("Build is not started yet");
+    if (!this.isStarted()) {
+      throw new Error("Visual Regression Tracker has not been started");
     }
 
     await axios
@@ -59,6 +55,10 @@ export class VisualRegressionTracker {
   }
 
   private async submitTestResult(test: TestRun): Promise<TestRunResult> {
+    if (!this.isStarted()) {
+      throw new Error("Visual Regression Tracker has not been started");
+    }
+
     const data = {
       buildId: this.buildId,
       projectId: this.projectId,
@@ -92,8 +92,6 @@ export class VisualRegressionTracker {
   }
 
   async track(test: TestRun) {
-    await this.start();
-
     const result = await this.submitTestResult(test);
 
     if (result.status === TestRunStatus.new) {
