@@ -16,32 +16,49 @@ export class VisualRegressionTracker {
     };
   }
 
-  private async startBuild() {
-    if (!this.buildId) {
-      const data = {
-        branchName: this.config.branchName,
-        project: this.config.project,
-      };
+  private isStarted() {
+    return !!this.buildId && !!this.projectId;
+  }
 
-      const build: Build = await axios
-        .post(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
-        .then(this.handleResponse)
-        .catch(this.handleException);
-
-      if (build.id) {
-        this.buildId = build.id;
-      } else {
-        throw new Error("Build id is not defined");
-      }
-      if (build.projectId) {
-        this.projectId = build.projectId;
-      } else {
-        throw new Error("Project id is not defined");
-      }
+  async start() {
+    if (this.isStarted()) {
+      throw new Error("Visual Regression Tracker has already been started");
     }
+
+    const data = {
+      branchName: this.config.branchName,
+      project: this.config.project,
+    };
+
+    const build: Build = await axios
+      .post(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
+      .then(this.handleResponse)
+      .catch(this.handleException);
+
+    this.buildId = build.id;
+    this.projectId = build.projectId;
+  }
+
+  async stop() {
+    if (!this.isStarted()) {
+      throw new Error("Visual Regression Tracker has not been started");
+    }
+
+    await axios
+      .patch(
+        `${this.config.apiUrl}/builds/${this.buildId}`,
+        {},
+        this.axiosConfig
+      )
+      .then(this.handleResponse)
+      .catch(this.handleException);
   }
 
   private async submitTestResult(test: TestRun): Promise<TestRunResult> {
+    if (!this.isStarted()) {
+      throw new Error("Visual Regression Tracker has not been started");
+    }
+
     const data = {
       buildId: this.buildId,
       projectId: this.projectId,
@@ -75,8 +92,6 @@ export class VisualRegressionTracker {
   }
 
   async track(test: TestRun) {
-    await this.startBuild();
-
     const result = await this.submitTestResult(test);
 
     if (result.status === TestRunStatus.new) {
