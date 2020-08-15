@@ -21,10 +21,6 @@ export class VisualRegressionTracker {
   }
 
   async start() {
-    if (this.isStarted()) {
-      throw new Error("Visual Regression Tracker has already been started");
-    }
-
     const data = {
       branchName: this.config.branchName,
       project: this.config.project,

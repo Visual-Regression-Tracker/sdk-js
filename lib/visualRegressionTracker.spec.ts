@@ -178,15 +178,7 @@ describe("VisualRegressionTracker", () => {
       expect(vrt.buildId).toBe(buildId);
       expect(vrt.projectId).toBe(projectId);
     });
-
-    test("should throw if already started", async () => {
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-
-      await expect(vrt["start"]()).rejects.toThrowError(
-        new Error("Visual Regression Tracker has already been started")
-      );
-    });
-
+    
     test("should handle exception", async () => {
       const handleExceptionMock = jest.fn();
       vrt["handleException"] = handleExceptionMock;
