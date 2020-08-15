@@ -38,13 +38,13 @@ const config: Config = {
 const vrt = new VisualRegressionTracker(config);
 ```
 
-### Start build
+### Setup
 
 ```js
 vrt.start();
 ```
 
-### Send image
+### Assert
 
 ```js
 await vrt.track({
@@ -74,7 +74,7 @@ await vrt.track({
 });
 ```
 
-### Stop build
+### Teardown
 
 ```js
 vrt.stop();
