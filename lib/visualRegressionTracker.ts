@@ -2,10 +2,10 @@ import { Config, Build, TestRun, TestRunResult, TestRunStatus } from "./types";
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
 export class VisualRegressionTracker {
-  config: Config;
-  buildId: string | undefined;
-  projectId: string | undefined;
-  axiosConfig: AxiosRequestConfig;
+  private config: Config;
+  private buildId: string | undefined;
+  private projectId: string | undefined;
+  private axiosConfig: AxiosRequestConfig;
 
   constructor(config: Config) {
     this.config = config;
@@ -90,11 +90,24 @@ export class VisualRegressionTracker {
   async track(test: TestRun) {
     const result = await this.submitTestResult(test);
 
-    if (result.status === TestRunStatus.new) {
-      throw new Error(`No baseline: ${result.url}`);
+    let errorMessage: string | undefined;
+    switch (result.status) {
+      case TestRunStatus.new: {
+        errorMessage = `No baseline: ${result.url}`;
+        break;
+      }
+      case TestRunStatus.unresolved: {
+        errorMessage = `Difference found: ${result.url}`;
+      }
     }
-    if (result.status === TestRunStatus.unresolved) {
-      throw new Error(`Difference found: ${result.url}`);
+
+    if (errorMessage) {
+      if (this.config.enableSoftAssert) {
+        // eslint-disable-next-line no-console
+        console.error(errorMessage);
+      } else {
+        throw new Error(errorMessage);
+      }
     }
   }
 }

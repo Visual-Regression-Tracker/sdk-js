@@ -66,6 +66,15 @@ const axiosErrorUnknown: AxiosError = {
   },
 };
 
+const axiosErrorEmptyResponse: AxiosError = {
+  isAxiosError: true,
+  config: {},
+  toJSON: jest.fn(),
+  name: "asdas",
+  message: "Unknown error",
+  response: undefined,
+};
+
 describe("VisualRegressionTracker", () => {
   let vrt: VisualRegressionTracker;
   const config: Config = {
@@ -73,21 +82,22 @@ describe("VisualRegressionTracker", () => {
     branchName: "develop",
     project: "Default project",
     apiKey: "CPKVK4JNK24NVNPNGVFQ853HXXEG",
+    enableSoftAssert: false,
   };
 
   beforeEach(async () => {
     vrt = new VisualRegressionTracker(config);
   });
 
-  describe("isStarted", () => {
-    it.each([
-      [undefined, undefined, false],
-      ["some", undefined, false],
-      [undefined, "some", false],
-      ["some", "some", true],
-    ])("should return if started", (buildId, projectId, expectedResult) => {
-      vrt.buildId = buildId;
-      vrt.projectId = projectId;
+  describe.each([
+    [undefined, undefined, false],
+    ["some", undefined, false],
+    [undefined, "some", false],
+    ["some", "some", true],
+  ])("isStarted", (buildId, projectId, expectedResult) => {
+    it(`should return ${expectedResult} if buildId ${buildId} projectId ${projectId}`, () => {
+      vrt["buildId"] = buildId;
+      vrt["projectId"] = projectId;
 
       const result = vrt["isStarted"]();
 
@@ -120,34 +130,46 @@ describe("VisualRegressionTracker", () => {
       expect(vrt["submitTestResult"]).toHaveBeenCalledWith(testRun);
     });
 
-    it("should track no baseline", async () => {
-      const testRunResult: TestRunResult = {
-        url: "url",
-        status: TestRunStatus.new,
+    describe.each<[TestRunStatus.new | TestRunStatus.unresolved, string]>([
+      [TestRunStatus.new, "No baseline: "],
+      [TestRunStatus.unresolved, "Difference found: "],
+    ])("should track error", (status, expectedMessage) => {
+      const testRunResultMock: TestRunResult = {
+        url: "http://foo.bar",
+        status: TestRunStatus.ok,
         pixelMisMatchCount: 12,
         diffPercent: 0.12,
         diffTollerancePercent: 0,
       };
-      vrt["submitTestResult"] = jest.fn().mockResolvedValueOnce(testRunResult);
 
-      await expect(vrt.track(testRun)).rejects.toThrowError(
-        new Error("No baseline: " + testRunResult.url)
-      );
-    });
+      beforeEach(() => {
+        testRunResultMock.status = status;
+      });
 
-    it("should track difference", async () => {
-      const testRunResult: TestRunResult = {
-        url: "url",
-        status: TestRunStatus.unresolved,
-        pixelMisMatchCount: 12,
-        diffPercent: 0.12,
-        diffTollerancePercent: 0,
-      };
-      vrt["submitTestResult"] = jest.fn().mockResolvedValueOnce(testRunResult);
+      it(`disabled soft assert should throw exception if status ${status}`, async () => {
+        vrt["config"].enableSoftAssert = false;
+        vrt["submitTestResult"] = jest
+          .fn()
+          .mockResolvedValueOnce(testRunResultMock);
 
-      await expect(vrt.track(testRun)).rejects.toThrowError(
-        new Error("Difference found: " + testRunResult.url)
-      );
+        await expect(vrt.track(testRun)).rejects.toThrowError(
+          new Error(expectedMessage.concat(testRunResultMock.url))
+        );
+      });
+
+      it(`enabled soft assert should log error if status ${status}`, async () => {
+        console.error = jest.fn();
+        vrt["config"].enableSoftAssert = true;
+        vrt["submitTestResult"] = jest
+          .fn()
+          .mockResolvedValueOnce(testRunResultMock);
+
+        await vrt.track(testRun);
+
+        expect(console.error).toHaveBeenCalledWith(
+          expectedMessage.concat(testRunResultMock.url)
+        );
+      });
     });
   });
 
@@ -175,10 +197,10 @@ describe("VisualRegressionTracker", () => {
           },
         }
       );
-      expect(vrt.buildId).toBe(buildId);
-      expect(vrt.projectId).toBe(projectId);
+      expect(vrt["buildId"]).toBe(buildId);
+      expect(vrt["projectId"]).toBe(projectId);
     });
-    
+
     test("should handle exception", async () => {
       const handleExceptionMock = jest.fn();
       vrt["handleException"] = handleExceptionMock;
@@ -195,7 +217,7 @@ describe("VisualRegressionTracker", () => {
   describe("stop", () => {
     test("should stop build", async () => {
       const buildId = "1312";
-      vrt.buildId = buildId;
+      vrt["buildId"] = buildId;
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
       mockedAxios.patch.mockResolvedValueOnce({});
 
@@ -221,7 +243,7 @@ describe("VisualRegressionTracker", () => {
     });
 
     test("should handle exception", async () => {
-      vrt.buildId = "some id";
+      vrt["buildId"] = "some id";
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
       const handleExceptionMock = jest.fn();
       vrt["handleException"] = handleExceptionMock;
@@ -254,8 +276,8 @@ describe("VisualRegressionTracker", () => {
       };
       const buildId = "1312";
       const projectId = "asd";
-      vrt.buildId = buildId;
-      vrt.projectId = projectId;
+      vrt["buildId"] = buildId;
+      vrt["projectId"] = projectId;
       mockedAxios.post.mockResolvedValueOnce({ data: testRunResult });
 
       const result = await vrt["submitTestResult"](testRun);
@@ -330,29 +352,23 @@ describe("VisualRegressionTracker", () => {
     expect(result).toBe(build);
   });
 
-  describe("handleException", () => {
-    it("error 401", async () => {
-      await expect(vrt["handleException"](axiosError401)).rejects.toBe(
-        "Unauthorized"
-      );
-    });
-
-    it("error 403", async () => {
-      await expect(vrt["handleException"](axiosError403)).rejects.toBe(
-        "Api key not authenticated"
-      );
-    });
-
-    it("error 404", async () => {
-      await expect(vrt["handleException"](axiosError404)).rejects.toBe(
-        "Project not found"
-      );
-    });
-
-    it("unknown", async () => {
-      await expect(vrt["handleException"](axiosErrorUnknown)).rejects.toBe(
-        axiosErrorUnknown.message
-      );
+  describe.each<[number | undefined, AxiosError, string]>([
+    [axiosError401.response?.status, axiosError401, "Unauthorized"],
+    [
+      axiosError403.response?.status,
+      axiosError403,
+      "Api key not authenticated",
+    ],
+    [axiosError404.response?.status, axiosError404, "Project not found"],
+    [
+      axiosErrorUnknown.response?.status,
+      axiosErrorUnknown,
+      axiosErrorUnknown.message,
+    ],
+    [undefined, axiosErrorEmptyResponse, axiosErrorUnknown.message],
+  ])("handleException", (code, error, expectedMessage) => {
+    it(`Error ${code}`, async () => {
+      await expect(vrt["handleException"](error)).rejects.toBe(expectedMessage);
     });
   });
 });
