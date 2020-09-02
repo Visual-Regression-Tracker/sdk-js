@@ -103,6 +103,7 @@ export class VisualRegressionTracker {
 
     if (errorMessage) {
       if (this.config.enableSoftAssert) {
+        // eslint-disable-next-line no-console
         console.error(errorMessage);
       } else {
         throw new Error(errorMessage);
