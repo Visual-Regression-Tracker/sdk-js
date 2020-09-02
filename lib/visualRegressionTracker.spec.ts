@@ -89,13 +89,13 @@ describe("VisualRegressionTracker", () => {
     vrt = new VisualRegressionTracker(config);
   });
 
-  describe("isStarted", () => {
-    it.each([
-      [undefined, undefined, false],
-      ["some", undefined, false],
-      [undefined, "some", false],
-      ["some", "some", true],
-    ])("should return if started", (buildId, projectId, expectedResult) => {
+  describe.each([
+    [undefined, undefined, false],
+    ["some", undefined, false],
+    [undefined, "some", false],
+    ["some", "some", true],
+  ])("isStarted", (buildId, projectId, expectedResult) => {
+    it(`should return ${expectedResult} if buildId ${buildId} projectId ${projectId}`, () => {
       vrt["buildId"] = buildId;
       vrt["projectId"] = projectId;
 
@@ -146,7 +146,7 @@ describe("VisualRegressionTracker", () => {
         testRunResultMock.status = status;
       });
 
-      it(`throw exception ${status}`, async () => {
+      it(`disabled soft assert should throw exception if status ${status}`, async () => {
         vrt["config"].enableSoftAssert = false;
         vrt["submitTestResult"] = jest
           .fn()
@@ -157,8 +157,8 @@ describe("VisualRegressionTracker", () => {
         );
       });
 
-      it(`log error ${status}`, async () => {
-        console.log = jest.fn();
+      it(`enabled soft assert should log error if status ${status}`, async () => {
+        console.error = jest.fn();
         vrt["config"].enableSoftAssert = true;
         vrt["submitTestResult"] = jest
           .fn()
