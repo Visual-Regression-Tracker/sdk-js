@@ -90,11 +90,23 @@ export class VisualRegressionTracker {
   async track(test: TestRun) {
     const result = await this.submitTestResult(test);
 
-    if (result.status === TestRunStatus.new) {
-      throw new Error(`No baseline: ${result.url}`);
+    let errorMessage: string | undefined;
+    switch (result.status) {
+      case TestRunStatus.new: {
+        errorMessage = `No baseline: ${result.url}`;
+        break;
+      }
+      case TestRunStatus.unresolved: {
+        errorMessage = `Difference found: ${result.url}`;
+      }
     }
-    if (result.status === TestRunStatus.unresolved) {
-      throw new Error(`Difference found: ${result.url}`);
+
+    if (errorMessage) {
+      if (this.config.enableSoftAssert) {
+        console.log(errorMessage);
+      } else {
+        throw new Error(errorMessage);
+      }
     }
   }
 }

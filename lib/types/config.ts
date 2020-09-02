@@ -3,4 +3,5 @@ export interface Config {
   branchName: string;
   project: string;
   apiKey: string;
+  enableSoftAssert: boolean;
 }

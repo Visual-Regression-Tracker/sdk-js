@@ -73,6 +73,7 @@ describe("VisualRegressionTracker", () => {
     branchName: "develop",
     project: "Default project",
     apiKey: "CPKVK4JNK24NVNPNGVFQ853HXXEG",
+    enableSoftAssert: false
   };
 
   beforeEach(async () => {
