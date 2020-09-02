@@ -166,7 +166,7 @@ describe("VisualRegressionTracker", () => {
 
         await vrt.track(testRun);
 
-        expect(console.log).toHaveBeenCalledWith(
+        expect(console.error).toHaveBeenCalledWith(
           expectedMessage.concat(testRunResultMock.url)
         );
       });

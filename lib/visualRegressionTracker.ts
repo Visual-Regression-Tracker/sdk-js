@@ -103,7 +103,7 @@ export class VisualRegressionTracker {
 
     if (errorMessage) {
       if (this.config.enableSoftAssert) {
-        console.log(errorMessage);
+        console.error(errorMessage);
       } else {
         throw new Error(errorMessage);
       }
