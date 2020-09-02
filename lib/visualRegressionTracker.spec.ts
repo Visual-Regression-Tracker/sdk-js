@@ -86,8 +86,8 @@ describe("VisualRegressionTracker", () => {
       [undefined, "some", false],
       ["some", "some", true],
     ])("should return if started", (buildId, projectId, expectedResult) => {
-      vrt.buildId = buildId;
-      vrt.projectId = projectId;
+      vrt["buildId"] = buildId;
+      vrt["projectId"] = projectId;
 
       const result = vrt["isStarted"]();
 
@@ -175,8 +175,8 @@ describe("VisualRegressionTracker", () => {
           },
         }
       );
-      expect(vrt.buildId).toBe(buildId);
-      expect(vrt.projectId).toBe(projectId);
+      expect(vrt["buildId"]).toBe(buildId);
+      expect(vrt["projectId"]).toBe(projectId);
     });
     
     test("should handle exception", async () => {
@@ -195,7 +195,7 @@ describe("VisualRegressionTracker", () => {
   describe("stop", () => {
     test("should stop build", async () => {
       const buildId = "1312";
-      vrt.buildId = buildId;
+      vrt["buildId"] = buildId;
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
       mockedAxios.patch.mockResolvedValueOnce({});
 
@@ -221,7 +221,7 @@ describe("VisualRegressionTracker", () => {
     });
 
     test("should handle exception", async () => {
-      vrt.buildId = "some id";
+      vrt["buildId"] = "some id";
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
       const handleExceptionMock = jest.fn();
       vrt["handleException"] = handleExceptionMock;
@@ -254,8 +254,8 @@ describe("VisualRegressionTracker", () => {
       };
       const buildId = "1312";
       const projectId = "asd";
-      vrt.buildId = buildId;
-      vrt.projectId = projectId;
+      vrt["buildId"] = buildId;
+      vrt["projectId"] = projectId;
       mockedAxios.post.mockResolvedValueOnce({ data: testRunResult });
 
       const result = await vrt["submitTestResult"](testRun);

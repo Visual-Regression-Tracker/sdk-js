@@ -2,10 +2,10 @@ import { Config, Build, TestRun, TestRunResult, TestRunStatus } from "./types";
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
 export class VisualRegressionTracker {
-  config: Config;
-  buildId: string | undefined;
-  projectId: string | undefined;
-  axiosConfig: AxiosRequestConfig;
+  private config: Config;
+  private buildId: string | undefined;
+  private projectId: string | undefined;
+  private axiosConfig: AxiosRequestConfig;
 
   constructor(config: Config) {
     this.config = config;
