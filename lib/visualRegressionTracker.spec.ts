@@ -368,7 +368,7 @@ describe("VisualRegressionTracker", () => {
     [undefined, axiosErrorEmptyResponse, axiosErrorUnknown.message],
   ])("handleException", (code, error, expectedMessage) => {
     it(`Error ${code}`, async () => {
-      await expect(vrt["handleException"](error)).rejects.toBe(expectedMessage);
+      await expect(vrt["handleException"](error)).rejects.toThrowError(expectedMessage);
     });
   });
 });
