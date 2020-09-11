@@ -59,7 +59,9 @@ const axiosErrorUnknown: AxiosError = {
   message: "Unknown error",
   response: {
     status: 500,
-    data: {},
+    data: {
+      some: "data",
+    },
     statusText: "Internal exception",
     headers: {},
     config: {},
@@ -363,12 +365,14 @@ describe("VisualRegressionTracker", () => {
     [
       axiosErrorUnknown.response?.status,
       axiosErrorUnknown,
-      axiosErrorUnknown.message,
+      JSON.stringify(axiosErrorUnknown),
     ],
-    [undefined, axiosErrorEmptyResponse, axiosErrorUnknown.message],
+    [undefined, axiosErrorEmptyResponse, "No response from server"],
   ])("handleException", (code, error, expectedMessage) => {
     it(`Error ${code}`, async () => {
-      await expect(vrt["handleException"](error)).rejects.toThrowError(expectedMessage);
+      await expect(vrt["handleException"](error)).rejects.toThrowError(
+        expectedMessage
+      );
     });
   });
 });

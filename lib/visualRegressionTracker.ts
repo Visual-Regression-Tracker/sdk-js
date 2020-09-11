@@ -73,18 +73,20 @@ export class VisualRegressionTracker {
   }
 
   private async handleException(error: AxiosError) {
-    const status = error.response?.status;
-    if (status === 401) {
-      throw new Error("Unauthorized");
+    if (!error.response) {
+      throw new Error("No response from server");
     }
-    if (status === 403) {
-      throw new Error("Api key not authenticated");
+    const status = error.response.status;
+    switch (status) {
+      case 401:
+        throw new Error("Unauthorized");
+      case 403:
+        throw new Error("Api key not authenticated");
+      case 404:
+        throw new Error("Project not found");
+      default:
+        throw new Error(JSON.stringify(error.response.data, null, "\t"));
     }
-    if (status === 404) {
-      throw new Error("Project not found");
-    }
-
-    throw new Error(error.message);
   }
 
   async track(test: TestRun) {
