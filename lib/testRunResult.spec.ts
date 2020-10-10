@@ -18,8 +18,8 @@ describe("TestRunResult", () => {
 
     expect(result.testRunResponse).toBe(testRunResponse);
     expect(result.imageUrl).toBe("http://localhost/imageName");
-    expect(result.diffUrl).toBe(undefined);
-    expect(result.baselineUrl).toBe(undefined);
+    expect(result.diffUrl).toBeUndefined();
+    expect(result.baselineUrl).toBeUndefined();
   });
 
   it("all image", () => {
