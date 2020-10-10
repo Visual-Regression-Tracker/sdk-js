@@ -1,6 +1,6 @@
 import {
   Config,
-  Build,
+  BuildResponse,
   TestRun,
   TestRunResponse,
   TestStatus,
@@ -33,7 +33,7 @@ export class VisualRegressionTracker {
       project: this.config.project,
     };
 
-    const build: Build = await axios
+    const build: BuildResponse = await axios
       .post(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
       .then(this.handleResponse)
       .catch(this.handleException);

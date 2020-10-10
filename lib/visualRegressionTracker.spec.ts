@@ -1,5 +1,5 @@
 import { VisualRegressionTracker } from "./visualRegressionTracker";
-import { Config, Build, TestRun, TestRunResponse, TestStatus } from "./types";
+import { Config, BuildResponse, TestRun, TestRunResponse, TestStatus } from "./types";
 import { mocked } from "ts-jest/utils";
 import TestRunResult from "./testRunResult";
 import axios, { AxiosError, AxiosResponse } from "axios";
@@ -197,7 +197,7 @@ describe("VisualRegressionTracker", () => {
     test("should start build", async () => {
       const buildId = "1312";
       const projectId = "asd";
-      const build: Build = {
+      const build: BuildResponse = {
         id: buildId,
         projectId: projectId,
       };
@@ -358,7 +358,7 @@ describe("VisualRegressionTracker", () => {
   });
 
   test("handleResponse", async () => {
-    const build: Build = {
+    const build: BuildResponse = {
       id: "id",
       projectId: "projectId",
     };
