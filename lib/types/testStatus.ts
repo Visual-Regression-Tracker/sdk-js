@@ -1,4 +1,4 @@
-export enum TestRunStatus {
+export enum TestStatus {
   new = "new",
   ok = "ok",
   unresolved = "unresolved",
