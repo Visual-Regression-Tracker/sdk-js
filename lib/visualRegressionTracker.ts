@@ -5,7 +5,7 @@ import {
   TestRunResponse,
   TestStatus,
 } from "./types";
-import TestRunResult from "./testRunResult"
+import TestRunResult from "./testRunResult";
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
 export class VisualRegressionTracker {
@@ -99,6 +99,12 @@ export class VisualRegressionTracker {
   async track(test: TestRun): Promise<TestRunResult> {
     const testRunResponse = await this.submitTestResult(test);
 
+    this.processTestRun(testRunResponse);
+
+    return new TestRunResult(testRunResponse, this.config.apiUrl);
+  }
+
+  private processTestRun(testRunResponse: TestRunResponse): void {
     let errorMessage: string | undefined;
     switch (testRunResponse.status) {
       case TestStatus.new: {
@@ -107,6 +113,7 @@ export class VisualRegressionTracker {
       }
       case TestStatus.unresolved: {
         errorMessage = `Difference found: ${testRunResponse.url}`;
+        break;
       }
     }
 
@@ -118,7 +125,5 @@ export class VisualRegressionTracker {
         throw new Error(errorMessage);
       }
     }
-
-    return new TestRunResult(testRunResponse, this.config.apiUrl);
   }
 }

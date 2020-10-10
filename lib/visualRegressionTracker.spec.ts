@@ -1,5 +1,11 @@
 import { VisualRegressionTracker } from "./visualRegressionTracker";
-import { Config, BuildResponse, TestRun, TestRunResponse, TestStatus } from "./types";
+import {
+  Config,
+  BuildResponse,
+  TestRun,
+  TestRunResponse,
+  TestStatus,
+} from "./types";
 import { mocked } from "ts-jest/utils";
 import TestRunResult from "./testRunResult";
 import axios, { AxiosError, AxiosResponse } from "axios";
@@ -137,59 +143,16 @@ describe("VisualRegressionTracker", () => {
       vrt["submitTestResult"] = jest
         .fn()
         .mockResolvedValueOnce(testRunResponse);
+      vrt["processTestRun"] = jest.fn();
 
       await vrt.track(testRun);
 
       expect(vrt["submitTestResult"]).toHaveBeenCalledWith(testRun);
+      expect(vrt["processTestRun"]).toHaveBeenCalledWith(testRunResponse);
       expect(mockedTestRunResult).toHaveBeenCalledWith(
         testRunResponse,
         "http://localhost:4200"
       );
-    });
-
-    describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
-      [TestStatus.new, "No baseline: "],
-      [TestStatus.unresolved, "Difference found: "],
-    ])("should track error", (status, expectedMessage) => {
-      const testRunResponseMock: TestRunResponse = {
-        url: "http://foo.bar",
-        status: TestStatus.ok,
-        pixelMisMatchCount: 12,
-        diffPercent: 0.12,
-        diffTollerancePercent: 0,
-        id: "some id",
-        imageName: "imageName",
-        merge: false,
-      };
-
-      beforeEach(() => {
-        testRunResponseMock.status = status;
-      });
-
-      it(`disabled soft assert should throw exception if status ${status}`, async () => {
-        vrt["config"].enableSoftAssert = false;
-        vrt["submitTestResult"] = jest
-          .fn()
-          .mockResolvedValueOnce(testRunResponseMock);
-
-        await expect(vrt.track(testRun)).rejects.toThrowError(
-          new Error(expectedMessage.concat(testRunResponseMock.url))
-        );
-      });
-
-      it(`enabled soft assert should log error if status ${status}`, async () => {
-        console.error = jest.fn();
-        vrt["config"].enableSoftAssert = true;
-        vrt["submitTestResult"] = jest
-          .fn()
-          .mockResolvedValueOnce(testRunResponseMock);
-
-        await vrt.track(testRun);
-
-        expect(console.error).toHaveBeenCalledWith(
-          expectedMessage.concat(testRunResponseMock.url)
-        );
-      });
     });
   });
 
@@ -393,6 +356,45 @@ describe("VisualRegressionTracker", () => {
     it(`Error ${code}`, async () => {
       await expect(vrt["handleException"](error)).rejects.toThrowError(
         expectedMessage
+      );
+    });
+  });
+
+  describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
+    [TestStatus.new, "No baseline: "],
+    [TestStatus.unresolved, "Difference found: "],
+  ])("processTestRun", (status, expectedMessage) => {
+    const testRunResponse: TestRunResponse = {
+      url: "http://foo.bar",
+      status: TestStatus.ok,
+      pixelMisMatchCount: 12,
+      diffPercent: 0.12,
+      diffTollerancePercent: 0,
+      id: "some id",
+      imageName: "imageName",
+      merge: false,
+    };
+
+    beforeEach(() => {
+      testRunResponse.status = status;
+    });
+
+    it(`disabled soft assert should throw exception if status ${status}`, () => {
+      vrt["config"].enableSoftAssert = false;
+
+      expect(() => vrt["processTestRun"](testRunResponse)).toThrowError(
+        new Error(expectedMessage.concat(testRunResponse.url))
+      );
+    });
+
+    it(`enabled soft assert should log error if status ${status}`, () => {
+      console.error = jest.fn();
+      vrt["config"].enableSoftAssert = true;
+
+      vrt["processTestRun"](testRunResponse);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expectedMessage.concat(testRunResponse.url)
       );
     });
   });
