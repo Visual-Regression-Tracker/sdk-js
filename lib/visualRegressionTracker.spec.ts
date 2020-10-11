@@ -1,10 +1,20 @@
 import { VisualRegressionTracker } from "./visualRegressionTracker";
-import { Config, Build, TestRun, TestRunResult, TestRunStatus } from "./types";
+import {
+  Config,
+  BuildResponse,
+  TestRun,
+  TestRunResponse,
+  TestStatus,
+} from "./types";
 import { mocked } from "ts-jest/utils";
+import TestRunResult from "./testRunResult";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
 jest.mock("axios");
 const mockedAxios = mocked(axios, true);
+
+jest.mock("./testRunResult");
+const mockedTestRunResult = mocked(TestRunResult, true);
 
 const axiosError404: AxiosError = {
   isAxiosError: true,
@@ -118,60 +128,31 @@ describe("VisualRegressionTracker", () => {
     };
 
     it("should track success", async () => {
-      const testRunResult: TestRunResult = {
+      const testRunResponse: TestRunResponse = {
         url: "url",
-        status: TestRunStatus.ok,
+        status: TestStatus.ok,
         pixelMisMatchCount: 12,
         diffPercent: 0.12,
         diffTollerancePercent: 0,
+        id: "some id",
+        imageName: "imageName",
+        diffName: "diffName",
+        baselineName: "baselineName",
+        merge: false,
       };
-      vrt["submitTestResult"] = jest.fn().mockResolvedValueOnce(testRunResult);
+      vrt["submitTestResult"] = jest
+        .fn()
+        .mockResolvedValueOnce(testRunResponse);
+      vrt["processTestRun"] = jest.fn();
 
       await vrt.track(testRun);
 
       expect(vrt["submitTestResult"]).toHaveBeenCalledWith(testRun);
-    });
-
-    describe.each<[TestRunStatus.new | TestRunStatus.unresolved, string]>([
-      [TestRunStatus.new, "No baseline: "],
-      [TestRunStatus.unresolved, "Difference found: "],
-    ])("should track error", (status, expectedMessage) => {
-      const testRunResultMock: TestRunResult = {
-        url: "http://foo.bar",
-        status: TestRunStatus.ok,
-        pixelMisMatchCount: 12,
-        diffPercent: 0.12,
-        diffTollerancePercent: 0,
-      };
-
-      beforeEach(() => {
-        testRunResultMock.status = status;
-      });
-
-      it(`disabled soft assert should throw exception if status ${status}`, async () => {
-        vrt["config"].enableSoftAssert = false;
-        vrt["submitTestResult"] = jest
-          .fn()
-          .mockResolvedValueOnce(testRunResultMock);
-
-        await expect(vrt.track(testRun)).rejects.toThrowError(
-          new Error(expectedMessage.concat(testRunResultMock.url))
-        );
-      });
-
-      it(`enabled soft assert should log error if status ${status}`, async () => {
-        console.error = jest.fn();
-        vrt["config"].enableSoftAssert = true;
-        vrt["submitTestResult"] = jest
-          .fn()
-          .mockResolvedValueOnce(testRunResultMock);
-
-        await vrt.track(testRun);
-
-        expect(console.error).toHaveBeenCalledWith(
-          expectedMessage.concat(testRunResultMock.url)
-        );
-      });
+      expect(vrt["processTestRun"]).toHaveBeenCalledWith(testRunResponse);
+      expect(mockedTestRunResult).toHaveBeenCalledWith(
+        testRunResponse,
+        "http://localhost:4200"
+      );
     });
   });
 
@@ -179,7 +160,7 @@ describe("VisualRegressionTracker", () => {
     test("should start build", async () => {
       const buildId = "1312";
       const projectId = "asd";
-      const build: Build = {
+      const build: BuildResponse = {
         id: buildId,
         projectId: projectId,
       };
@@ -261,12 +242,15 @@ describe("VisualRegressionTracker", () => {
 
   describe("submitTestResults", () => {
     it("should submit test run", async () => {
-      const testRunResult: TestRunResult = {
+      const testRunResponse: TestRunResponse = {
         url: "url",
-        status: TestRunStatus.unresolved,
+        status: TestStatus.unresolved,
         pixelMisMatchCount: 12,
         diffPercent: 0.12,
         diffTollerancePercent: 0,
+        id: "some id",
+        imageName: "imageName",
+        merge: false,
       };
       const testRun: TestRun = {
         name: "name",
@@ -280,11 +264,11 @@ describe("VisualRegressionTracker", () => {
       const projectId = "asd";
       vrt["buildId"] = buildId;
       vrt["projectId"] = projectId;
-      mockedAxios.post.mockResolvedValueOnce({ data: testRunResult });
+      mockedAxios.post.mockResolvedValueOnce({ data: testRunResponse });
 
       const result = await vrt["submitTestResult"](testRun);
 
-      expect(result).toBe(testRunResult);
+      expect(result).toBe(testRunResponse);
       expect(mockedAxios.post).toHaveBeenCalledWith(
         `${config.apiUrl}/test-runs`,
         {
@@ -337,7 +321,7 @@ describe("VisualRegressionTracker", () => {
   });
 
   test("handleResponse", async () => {
-    const build: Build = {
+    const build: BuildResponse = {
       id: "id",
       projectId: "projectId",
     };
@@ -372,6 +356,45 @@ describe("VisualRegressionTracker", () => {
     it(`Error ${code}`, async () => {
       await expect(vrt["handleException"](error)).rejects.toThrowError(
         expectedMessage
+      );
+    });
+  });
+
+  describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
+    [TestStatus.new, "No baseline: "],
+    [TestStatus.unresolved, "Difference found: "],
+  ])("processTestRun", (status, expectedMessage) => {
+    const testRunResponse: TestRunResponse = {
+      url: "http://foo.bar",
+      status: TestStatus.ok,
+      pixelMisMatchCount: 12,
+      diffPercent: 0.12,
+      diffTollerancePercent: 0,
+      id: "some id",
+      imageName: "imageName",
+      merge: false,
+    };
+
+    beforeEach(() => {
+      testRunResponse.status = status;
+    });
+
+    it(`disabled soft assert should throw exception if status ${status}`, () => {
+      vrt["config"].enableSoftAssert = false;
+
+      expect(() => vrt["processTestRun"](testRunResponse)).toThrowError(
+        new Error(expectedMessage.concat(testRunResponse.url))
+      );
+    });
+
+    it(`enabled soft assert should log error if status ${status}`, () => {
+      console.error = jest.fn();
+      vrt["config"].enableSoftAssert = true;
+
+      vrt["processTestRun"](testRunResponse);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expectedMessage.concat(testRunResponse.url)
       );
     });
   });

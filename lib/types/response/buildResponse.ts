@@ -1,4 +1,4 @@
-export interface Build {
+export interface BuildResponse {
   id: string;
   projectId: string;
 }

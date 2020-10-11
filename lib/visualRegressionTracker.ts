@@ -1,4 +1,11 @@
-import { Config, Build, TestRun, TestRunResult, TestRunStatus } from "./types";
+import {
+  Config,
+  BuildResponse,
+  TestRun,
+  TestRunResponse,
+  TestStatus,
+} from "./types";
+import TestRunResult from "./testRunResult";
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
 export class VisualRegressionTracker {
@@ -26,7 +33,7 @@ export class VisualRegressionTracker {
       project: this.config.project,
     };
 
-    const build: Build = await axios
+    const build: BuildResponse = await axios
       .post(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
       .then(this.handleResponse)
       .catch(this.handleException);
@@ -50,7 +57,7 @@ export class VisualRegressionTracker {
       .catch(this.handleException);
   }
 
-  private async submitTestResult(test: TestRun): Promise<TestRunResult> {
+  private async submitTestResult(test: TestRun): Promise<TestRunResponse> {
     if (!this.isStarted()) {
       throw new Error("Visual Regression Tracker has not been started");
     }
@@ -89,17 +96,24 @@ export class VisualRegressionTracker {
     }
   }
 
-  async track(test: TestRun) {
-    const result = await this.submitTestResult(test);
+  async track(test: TestRun): Promise<TestRunResult> {
+    const testRunResponse = await this.submitTestResult(test);
 
+    this.processTestRun(testRunResponse);
+
+    return new TestRunResult(testRunResponse, this.config.apiUrl);
+  }
+
+  private processTestRun(testRunResponse: TestRunResponse): void {
     let errorMessage: string | undefined;
-    switch (result.status) {
-      case TestRunStatus.new: {
-        errorMessage = `No baseline: ${result.url}`;
+    switch (testRunResponse.status) {
+      case TestStatus.new: {
+        errorMessage = `No baseline: ${testRunResponse.url}`;
         break;
       }
-      case TestRunStatus.unresolved: {
-        errorMessage = `Difference found: ${result.url}`;
+      case TestStatus.unresolved: {
+        errorMessage = `Difference found: ${testRunResponse.url}`;
+        break;
       }
     }
 
