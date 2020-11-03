@@ -51,6 +51,12 @@ const vrt = new VisualRegressionTracker(config);
 vrt.start();
 ```
 
+### Teardown
+
+```js
+vrt.stop();
+```
+
 ### Assert
 
 ```js
@@ -78,11 +84,27 @@ await vrt.track({
 
   // Optional
   device: "PC",
+
+  // Array of areas to be ignored
+  // Optional
+  ignoreAreas: [
+    {
+      // X-coordinate relative of left upper corner
+      // Required
+      x: 10;
+
+      // Y-coordinate relative of left upper corner
+      // Required
+      y: 20;
+
+      // Area width in px
+      // Required
+      width: 300;
+
+      // Height width in px
+      // Required
+      height: 400;
+    }
+  ]
 });
-```
-
-### Teardown
-
-```js
-vrt.stop();
 ```

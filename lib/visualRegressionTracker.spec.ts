@@ -259,6 +259,14 @@ describe("VisualRegressionTracker", () => {
         device: "device",
         viewport: "viewport",
         browser: "browser",
+        ignoreAreas: [
+          {
+            x: 1,
+            y: 2,
+            height: 300,
+            width: 400,
+          },
+        ],
       };
       const buildId = "1312";
       const projectId = "asd";
@@ -281,6 +289,7 @@ describe("VisualRegressionTracker", () => {
           device: testRun.device,
           viewport: testRun.viewport,
           browser: testRun.browser,
+          ignoreAreas: testRun.ignoreAreas,
         },
         {
           headers: {
