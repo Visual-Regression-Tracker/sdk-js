@@ -1,3 +1,5 @@
+import { IgnoreArea } from "./ignoreArea";
+
 export interface TestRun {
   name: string;
   imageBase64: string;
@@ -6,4 +8,5 @@ export interface TestRun {
   viewport?: string;
   device?: string;
   diffTollerancePercent?: number;
+  ignoreAreas?: IgnoreArea[];
 }
