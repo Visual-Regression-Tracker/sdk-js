@@ -31,6 +31,7 @@ export class VisualRegressionTracker {
     const data = {
       branchName: this.config.branchName,
       project: this.config.project,
+      ciBuildId: this.config.ciBuildId,
     };
 
     const build: BuildResponse = await axios

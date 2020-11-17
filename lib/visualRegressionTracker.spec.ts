@@ -95,6 +95,7 @@ describe("VisualRegressionTracker", () => {
     project: "Default project",
     apiKey: "CPKVK4JNK24NVNPNGVFQ853HXXEG",
     enableSoftAssert: false,
+    ciBuildId: "someCIBuildId",
   };
 
   beforeEach(async () => {
@@ -162,7 +163,7 @@ describe("VisualRegressionTracker", () => {
       const projectId = "asd";
       const build: BuildResponse = {
         id: buildId,
-        projectId: projectId,
+        projectId,
       };
       mockedAxios.post.mockResolvedValueOnce({ data: build });
 
@@ -173,6 +174,7 @@ describe("VisualRegressionTracker", () => {
         {
           branchName: config.branchName,
           project: config.project,
+          ciBuildId: config.ciBuildId,
         },
         {
           headers: {
