@@ -5,17 +5,42 @@ import {
   TestRunResponse,
   TestStatus,
 } from "./types";
+import { readFileSync, existsSync } from "fs";
 import TestRunResult from "./testRunResult";
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
+const CONFIG_FILE_PATH = "./vrt.json";
+const REQUIRE_CONFIG_FIELDS = ["apiUrl", "branchName", "project", "apiKey"];
+const CONFIG_ENV_MAPPING = {
+  apiUrl: "VRT_APIURL",
+  ciBuildId: "VRT_CIBUILDID",
+  branchName: "VRT_BRANCHNAME",
+  project: "VRT_PROJECT",
+  apiKey: "VRT_APIKEY",
+  enableSoftAssert: "VRT_ENABLESOFTASSERT",
+};
+
 export class VisualRegressionTracker {
-  private config: Config;
+  private config: Config = {
+    apiUrl: "",
+    apiKey: "",
+    project: "",
+    branchName: "",
+    ciBuildId: "",
+    enableSoftAssert: false,
+  };
   private buildId: string | undefined;
   private projectId: string | undefined;
   private axiosConfig: AxiosRequestConfig;
 
-  constructor(config: Config) {
-    this.config = config;
+  constructor(explicitConfig?: Config) {
+    if (explicitConfig) {
+      this.config = explicitConfig;
+    } else {
+      this.readConfigFromFile();
+      this.readConfigFromEnv();
+    }
+    this.validateConfig();
     this.axiosConfig = {
       headers: {
         apiKey: this.config.apiKey,
@@ -126,5 +151,37 @@ export class VisualRegressionTracker {
         throw new Error(errorMessage);
       }
     }
+  }
+
+  private readConfigFromFile() {
+    if (existsSync(CONFIG_FILE_PATH)) {
+      const fileConfig = JSON.parse(readFileSync(CONFIG_FILE_PATH).toString());
+      this.config = {
+        apiKey: fileConfig.apiKey,
+        apiUrl: fileConfig.apiUrl,
+        branchName: fileConfig.branchName,
+        project: fileConfig.project,
+        enableSoftAssert: fileConfig.enableSoftAssert,
+        ciBuildId: fileConfig.ciBuildId,
+      };
+    }
+  }
+
+  private readConfigFromEnv() {
+    Object.entries(CONFIG_ENV_MAPPING).forEach(([k, v]) => {
+      if (process.env[v]) {
+        this.config[k] = process.env[v];
+      }
+    });
+  }
+
+  private validateConfig() {
+    REQUIRE_CONFIG_FIELDS.forEach((field) => {
+      if (!this.config[field]) {
+        throw new Error(
+          `Visual Regression Tracker config is not valid. ${field} is specified`
+        );
+      }
+    });
   }
 }
