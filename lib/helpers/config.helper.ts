@@ -2,68 +2,67 @@ import { existsSync, readFileSync } from "fs";
 import { Config } from "types";
 
 const CONFIG_FILE_PATH = "./vrt.json";
-const REQUIRE_CONFIG_FIELDS = ["apiUrl", "branchName", "project", "apiKey"];
-const CONFIG_ENV_MAPPING = {
-  apiUrl: "VRT_APIURL",
-  ciBuildId: "VRT_CIBUILDID",
-  branchName: "VRT_BRANCHNAME",
-  project: "VRT_PROJECT",
-  apiKey: "VRT_APIKEY",
-  enableSoftAssert: "VRT_ENABLESOFTASSERT",
-};
-
-const computeFinalConfig = (explicitConfig?: Config): Config => {
-  let config: Config = {
-    apiUrl: "",
-    apiKey: "",
-    project: "",
-    branchName: "",
-    ciBuildId: "",
-    enableSoftAssert: false,
-  };
-
-  if (explicitConfig) {
-    config = explicitConfig;
-  } else {
-    config = readConfigFromFile(config);
-    config = readConfigFromEnv(config);
-  }
-  validateConfig(config);
-  return config;
-};
 
 const readConfigFromFile = (config: Config): Config => {
   if (existsSync(CONFIG_FILE_PATH)) {
     const fileConfig = JSON.parse(readFileSync(CONFIG_FILE_PATH).toString());
-    config = {
-      apiKey: fileConfig.apiKey,
-      apiUrl: fileConfig.apiUrl,
-      branchName: fileConfig.branchName,
-      project: fileConfig.project,
-      enableSoftAssert: fileConfig.enableSoftAssert,
-      ciBuildId: fileConfig.ciBuildId,
-    };
+    if (fileConfig.apiUrl) {
+      config.apiUrl = fileConfig.apiUrl;
+    }
+    if (fileConfig.ciBuildId) {
+      config.ciBuildId = fileConfig.ciBuildId;
+    }
+    if (fileConfig.branchName) {
+      config.branchName = fileConfig.branchName;
+    }
+    if (fileConfig.project) {
+      config.project = fileConfig.project;
+    }
+    if (fileConfig.apiKey) {
+      config.apiKey = fileConfig.apiKey;
+    }
+    if (fileConfig.enableSoftAssert != undefined) {
+      config.enableSoftAssert = fileConfig.enableSoftAssert;
+    }
   }
   return config;
 };
 
 const readConfigFromEnv = (config: Config): Config => {
-  Object.entries(CONFIG_ENV_MAPPING).forEach(([k, v]) => {
-    if (process.env[v]) {
-      config[k] = process.env[v];
-    }
-  });
+  if (process.env["VRT_APIURL"]) {
+    config.apiUrl = process.env["VRT_APIURL"];
+  }
+  if (process.env["VRT_CIBUILDID"]) {
+    config.ciBuildId = process.env["VRT_CIBUILDID"];
+  }
+  if (process.env["VRT_BRANCHNAME"]) {
+    config.branchName = process.env["VRT_BRANCHNAME"];
+  }
+  if (process.env["VRT_PROJECT"]) {
+    config.project = process.env["VRT_PROJECT"];
+  }
+  if (process.env["VRT_APIKEY"]) {
+    config.apiKey = process.env["VRT_APIKEY"];
+  }
+  if (process.env["VRT_ENABLESOFTASSERT"] != undefined) {
+    config.enableSoftAssert = process.env["VRT_ENABLESOFTASSERT"] == "true";
+  }
   return config;
 };
 
 const validateConfig = (config: Config): void => {
-  REQUIRE_CONFIG_FIELDS.forEach((field) => {
-    if (!config[field]) {
-      throw new Error(
-        `Visual Regression Tracker config is not valid. ${field} is not specified`
-      );
-    }
-  });
+  if (!config.apiKey) {
+    throw new Error("apiKey is not specified");
+  }
+  if (!config.branchName) {
+    throw new Error("branchName is not specified");
+  }
+  if (!config.apiUrl) {
+    throw new Error("apiUrl is not specified");
+  }
+  if (!config.project) {
+    throw new Error("project is not specified");
+  }
 };
 
-export { computeFinalConfig };
+export { readConfigFromFile, readConfigFromEnv, validateConfig };
