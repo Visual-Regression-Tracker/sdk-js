@@ -7,15 +7,33 @@ import {
 } from "./types";
 import TestRunResult from "./testRunResult";
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import {
+  readConfigFromEnv,
+  readConfigFromFile,
+  validateConfig,
+} from "./helpers";
 
 export class VisualRegressionTracker {
-  private config: Config;
+  private config: Config = {
+    apiUrl: "",
+    apiKey: "",
+    project: "",
+    branchName: "",
+    ciBuildId: "",
+    enableSoftAssert: false,
+  };
   private buildId: string | undefined;
   private projectId: string | undefined;
   private axiosConfig: AxiosRequestConfig;
 
-  constructor(config: Config) {
-    this.config = config;
+  constructor(explicitConfig?: Config) {
+    if (explicitConfig) {
+      this.config = explicitConfig;
+    } else {
+      this.config = readConfigFromFile(this.config);
+      this.config = readConfigFromEnv(this.config);
+    }
+    validateConfig(this.config);
     this.axiosConfig = {
       headers: {
         apiKey: this.config.apiKey,

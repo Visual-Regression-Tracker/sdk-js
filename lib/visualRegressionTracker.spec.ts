@@ -9,12 +9,16 @@ import {
 import { mocked } from "ts-jest/utils";
 import TestRunResult from "./testRunResult";
 import axios, { AxiosError, AxiosResponse } from "axios";
+import * as configHelper from "./helpers/config.helper";
 
 jest.mock("axios");
 const mockedAxios = mocked(axios, true);
 
 jest.mock("./testRunResult");
 const mockedTestRunResult = mocked(TestRunResult, true);
+
+jest.mock("./helpers/config.helper");
+const mockedConfigHelper = mocked(configHelper);
 
 const axiosError404: AxiosError = {
   isAxiosError: true,
@@ -87,16 +91,53 @@ const axiosErrorEmptyResponse: AxiosError = {
   response: undefined,
 };
 
+const config: Config = {
+  apiUrl: "http://localhost:4200",
+  branchName: "develop",
+  project: "Default project",
+  apiKey: "CPKVK4JNK24NVNPNGVFQ853HXXEG",
+  enableSoftAssert: false,
+  ciBuildId: "someCIBuildId",
+};
+
+describe("VisualRegressionTracker", () => {
+  const fileConfig: Config = {
+    apiUrl: "apiUrlFile",
+    branchName: "branchNameFile",
+    project: "projectFile",
+    apiKey: "apiKeyFile",
+    enableSoftAssert: false,
+    ciBuildId: "ciBuildIdFile",
+  };
+  const envConfig: Config = {
+    apiUrl: "apiUrlEnv",
+    branchName: "branchNameEnv",
+    project: "projectEnv",
+    apiKey: "apiKeyEnv",
+    enableSoftAssert: false,
+    ciBuildId: "ciBuildIdEnv",
+  };
+
+  beforeEach(() => {
+    mockedConfigHelper.readConfigFromFile.mockReturnValueOnce(fileConfig);
+    mockedConfigHelper.readConfigFromEnv.mockReturnValueOnce(envConfig);
+  });
+
+  it("should use explicit config", () => {
+    new VisualRegressionTracker(config);
+
+    expect(mockedConfigHelper.validateConfig).toHaveBeenCalledWith(config);
+  });
+
+  it("should use env over file config", () => {
+    new VisualRegressionTracker();
+
+    expect(mockedConfigHelper.validateConfig).toHaveBeenCalledWith(envConfig);
+  });
+});
+
 describe("VisualRegressionTracker", () => {
   let vrt: VisualRegressionTracker;
-  const config: Config = {
-    apiUrl: "http://localhost:4200",
-    branchName: "develop",
-    project: "Default project",
-    apiKey: "CPKVK4JNK24NVNPNGVFQ853HXXEG",
-    enableSoftAssert: false,
-    ciBuildId: "someCIBuildId",
-  };
 
   beforeEach(async () => {
     vrt = new VisualRegressionTracker(config);
