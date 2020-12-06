@@ -101,31 +101,35 @@ const config: Config = {
 };
 
 describe("VisualRegressionTracker", () => {
+  const fileConfig: Config = {
+    apiUrl: "apiUrlFile",
+    branchName: "branchNameFile",
+    project: "projectFile",
+    apiKey: "apiKeyFile",
+    enableSoftAssert: false,
+    ciBuildId: "ciBuildIdFile",
+  };
+  const envConfig: Config = {
+    apiUrl: "apiUrlEnv",
+    branchName: "branchNameEnv",
+    project: "projectEnv",
+    apiKey: "apiKeyEnv",
+    enableSoftAssert: false,
+    ciBuildId: "ciBuildIdEnv",
+  };
+
+  beforeEach(() => {
+    mockedConfigHelper.readConfigFromFile.mockReturnValueOnce(fileConfig);
+    mockedConfigHelper.readConfigFromEnv.mockReturnValueOnce(envConfig);
+  });
+
   it("should use explicit config", () => {
     new VisualRegressionTracker(config);
 
-    expect(mockedConfigHelper.readConfigFromEnv).not.toHaveBeenCalled();
-    expect(mockedConfigHelper.readConfigFromFile).not.toHaveBeenCalled();
     expect(mockedConfigHelper.validateConfig).toHaveBeenCalledWith(config);
   });
 
   it("should use env over file config", () => {
-    const envConfig: Config = {
-      apiUrl: "apiUrlUpdated",
-      branchName: "branchNameUpdated",
-      project: "projectUpdated",
-      apiKey: "apiKeyUpdated",
-      enableSoftAssert: false,
-      ciBuildId: "ciBuildIdUpdated",
-    };
-    mockedConfigHelper.readConfigFromFile.mockReturnValueOnce({
-      apiKey: "apiKey",
-      apiUrl: "apiUrl",
-      branchName: "branchName",
-      project: "project",
-    });
-    mockedConfigHelper.readConfigFromEnv.mockReturnValueOnce(envConfig);
-
     new VisualRegressionTracker();
 
     expect(mockedConfigHelper.validateConfig).toHaveBeenCalledWith(envConfig);

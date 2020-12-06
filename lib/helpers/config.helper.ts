@@ -21,7 +21,7 @@ const readConfigFromFile = (config: Config): Config => {
     if (fileConfig.apiKey) {
       config.apiKey = fileConfig.apiKey;
     }
-    if (fileConfig.enableSoftAssert != undefined) {
+    if (fileConfig.enableSoftAssert !== undefined) {
       config.enableSoftAssert = fileConfig.enableSoftAssert;
     }
   }
@@ -44,7 +44,7 @@ const readConfigFromEnv = (config: Config): Config => {
   if (process.env["VRT_APIKEY"]) {
     config.apiKey = process.env["VRT_APIKEY"];
   }
-  if (process.env["VRT_ENABLESOFTASSERT"] != undefined) {
+  if (process.env["VRT_ENABLESOFTASSERT"] !== undefined) {
     config.enableSoftAssert = process.env["VRT_ENABLESOFTASSERT"] == "true";
   }
   return config;
