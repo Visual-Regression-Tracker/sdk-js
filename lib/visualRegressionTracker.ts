@@ -19,8 +19,6 @@ export class VisualRegressionTracker {
     apiKey: "",
     project: "",
     branchName: "",
-    ciBuildId: "",
-    enableSoftAssert: false,
   };
   private buildId: string | undefined;
   private projectId: string | undefined;

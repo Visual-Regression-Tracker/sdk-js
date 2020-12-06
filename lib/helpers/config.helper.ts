@@ -9,9 +9,6 @@ const readConfigFromFile = (config: Config): Config => {
     if (fileConfig.apiUrl) {
       config.apiUrl = fileConfig.apiUrl;
     }
-    if (fileConfig.ciBuildId) {
-      config.ciBuildId = fileConfig.ciBuildId;
-    }
     if (fileConfig.branchName) {
       config.branchName = fileConfig.branchName;
     }
@@ -20,6 +17,9 @@ const readConfigFromFile = (config: Config): Config => {
     }
     if (fileConfig.apiKey) {
       config.apiKey = fileConfig.apiKey;
+    }
+    if (fileConfig.ciBuildId) {
+      config.ciBuildId = fileConfig.ciBuildId;
     }
     if (fileConfig.enableSoftAssert !== undefined) {
       config.enableSoftAssert = fileConfig.enableSoftAssert;
@@ -32,9 +32,6 @@ const readConfigFromEnv = (config: Config): Config => {
   if (process.env["VRT_APIURL"]) {
     config.apiUrl = process.env["VRT_APIURL"];
   }
-  if (process.env["VRT_CIBUILDID"]) {
-    config.ciBuildId = process.env["VRT_CIBUILDID"];
-  }
   if (process.env["VRT_BRANCHNAME"]) {
     config.branchName = process.env["VRT_BRANCHNAME"];
   }
@@ -43,6 +40,9 @@ const readConfigFromEnv = (config: Config): Config => {
   }
   if (process.env["VRT_APIKEY"]) {
     config.apiKey = process.env["VRT_APIKEY"];
+  }
+  if (process.env["VRT_CIBUILDID"]) {
+    config.ciBuildId = process.env["VRT_CIBUILDID"];
   }
   if (process.env["VRT_ENABLESOFTASSERT"] !== undefined) {
     config.enableSoftAssert = process.env["VRT_ENABLESOFTASSERT"] === "true";
