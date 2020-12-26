@@ -43,20 +43,22 @@ export class VisualRegressionTracker {
     return !!this.buildId && !!this.projectId;
   }
 
-  async start() {
+  async start(): Promise<BuildResponse> {
     const data = {
       branchName: this.config.branchName,
       project: this.config.project,
       ciBuildId: this.config.ciBuildId,
     };
 
-    const build: BuildResponse = await axios
+    return axios
       .post(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
       .then(this.handleResponse)
-      .catch(this.handleException);
-
-    this.buildId = build.id;
-    this.projectId = build.projectId;
+      .catch(this.handleException)
+      .then((build: BuildResponse) => {
+        this.buildId = build.id;
+        this.projectId = build.projectId;
+        return build;
+      });
   }
 
   async stop() {

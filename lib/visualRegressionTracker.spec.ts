@@ -208,7 +208,7 @@ describe("VisualRegressionTracker", () => {
       };
       mockedAxios.post.mockResolvedValueOnce({ data: build });
 
-      await vrt["start"]();
+      const result = await vrt.start();
 
       expect(mockedAxios.post).toHaveBeenCalledWith(
         `${config.apiUrl}/builds`,
@@ -225,6 +225,7 @@ describe("VisualRegressionTracker", () => {
       );
       expect(vrt["buildId"]).toBe(buildId);
       expect(vrt["projectId"]).toBe(projectId);
+      expect(result).toBe(build);
     });
 
     test("should handle exception", async () => {
@@ -233,7 +234,7 @@ describe("VisualRegressionTracker", () => {
       mockedAxios.post.mockRejectedValueOnce(axiosError401);
 
       try {
-        await vrt["start"]();
+        await vrt.start();
       } catch {}
 
       expect(handleExceptionMock).toHaveBeenCalledWith(axiosError401);
