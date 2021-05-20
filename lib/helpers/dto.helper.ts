@@ -2,7 +2,7 @@ import FormData from "form-data";
 import fs from "fs";
 import { TestRunMultipartDto } from "types/request";
 
-export const multipartDtoToFormData = (dto: TestRunMultipartDto) => {
+export const multipartDtoToFormData = (dto: TestRunMultipartDto): FormData => {
   const data = new FormData();
   data.append("buildId", dto.buildId);
   data.append("projectId", dto.projectId);

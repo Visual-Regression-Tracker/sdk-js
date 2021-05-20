@@ -1,7 +1,12 @@
 import { multipartDtoToFormData } from "./index";
 import { TestRunMultipartDto } from "types/request";
+import { mocked } from "ts-jest/utils";
+import * as fs from "fs";
 
 jest.mock("form-data");
+
+jest.mock("fs");
+const fsMock = mocked(fs);
 
 describe("multipartDtoToFormData", () => {
   it.each([
@@ -37,6 +42,13 @@ describe("multipartDtoToFormData", () => {
       },
     ],
   ])("should return form data", (dto: TestRunMultipartDto) => {
-    expect(multipartDtoToFormData(dto)).toMatchSnapshot();
+    fsMock.createReadStream.mockReturnValueOnce(
+      "mocked Image" as unknown as fs.ReadStream
+    );
+    fsMock.statSync.mockReturnValueOnce({ size: 1234 } as fs.Stats);
+
+    const result = multipartDtoToFormData(dto);
+
+    expect(result).toMatchSnapshot();
   });
 });
