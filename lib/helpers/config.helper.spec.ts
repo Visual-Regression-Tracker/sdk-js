@@ -112,48 +112,36 @@ describe("config.helper", () => {
     });
   });
   describe("validateConfig", () => {
+    it("valid", () => {
+      expect(() => validateConfig(initialConfig)).not.toThrowError();
+    });
+
     it.each([
       [
         {
+          ...initialConfig,
           apiUrl: "",
-          branchName: "develop",
-          project: "Default project",
-          apiKey: "CPKVK4JNK24NVNPNGVFQ853HXXEG",
-          enableSoftAssert: false,
-          ciBuildId: "someCIBuildId",
         },
         "apiUrl is not specified",
       ],
       [
         {
-          apiUrl: "http://localhost:4200",
+          ...initialConfig,
           branchName: "",
-          project: "Default project",
-          apiKey: "CPKVK4JNK24NVNPNGVFQ853HXXEG",
-          enableSoftAssert: false,
-          ciBuildId: "someCIBuildId",
         },
         "branchName is not specified",
       ],
       [
         {
-          apiUrl: "http://localhost:4200",
-          branchName: "master",
+          ...initialConfig,
           project: "",
-          apiKey: "CPKVK4JNK24NVNPNGVFQ853HXXEG",
-          enableSoftAssert: false,
-          ciBuildId: "someCIBuildId",
         },
         "project is not specified",
       ],
       [
         {
-          apiUrl: "http://localhost:4200",
-          branchName: "master",
-          project: "project",
+          ...initialConfig,
           apiKey: "",
-          enableSoftAssert: false,
-          ciBuildId: "someCIBuildId",
         },
         "apiKey is not specified",
       ],
