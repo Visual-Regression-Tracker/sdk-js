@@ -442,7 +442,9 @@ describe("VisualRegressionTracker", () => {
       const handleExceptionMock = jest.fn();
       vrt["handleException"] = handleExceptionMock;
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(new FormData());
+      mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(
+        new FormData()
+      );
       mockedAxios.post.mockRejectedValueOnce(axiosError401);
       try {
         await vrt["submitTestRunMultipart"](testRunMultipart);
