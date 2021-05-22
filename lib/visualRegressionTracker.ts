@@ -1,21 +1,17 @@
 import {
   Config,
   BuildResponse,
+  TestRun,
   TestRunResponse,
   TestStatus,
-  TestRunMultipart,
-  TestRunBase64,
 } from "./types";
 import TestRunResult from "./testRunResult";
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import {
-  instanceOfTestRunBase64,
   readConfigFromEnv,
   readConfigFromFile,
-  multipartDtoToFormData,
   validateConfig,
 } from "./helpers";
-import { TestRunBase64Dto } from "types/request";
 
 export class VisualRegressionTracker {
   private config: Config = {
@@ -24,8 +20,8 @@ export class VisualRegressionTracker {
     project: "",
     branchName: "",
   };
-  private buildId: string = "";
-  private projectId: string = "";
+  private buildId: string | undefined;
+  private projectId: string | undefined;
   private axiosConfig: AxiosRequestConfig;
 
   constructor(explicitConfig?: Config) {
@@ -80,10 +76,12 @@ export class VisualRegressionTracker {
       .catch(this.handleException);
   }
 
-  private async submitTestRunBase64(
-    test: TestRunBase64
-  ): Promise<TestRunResponse> {
-    const data: TestRunBase64Dto = {
+  private async submitTestResult(test: TestRun): Promise<TestRunResponse> {
+    if (!this.isStarted()) {
+      throw new Error("Visual Regression Tracker has not been started");
+    }
+
+    const data = {
       buildId: this.buildId,
       projectId: this.projectId,
       branchName: this.config.branchName,
@@ -92,28 +90,6 @@ export class VisualRegressionTracker {
 
     return axios
       .post(`${this.config.apiUrl}/test-runs`, data, this.axiosConfig)
-      .then(this.handleResponse)
-      .catch(this.handleException);
-  }
-
-  private async submitTestRunMultipart(
-    test: TestRunMultipart
-  ): Promise<TestRunResponse> {
-    const data = multipartDtoToFormData({
-      buildId: this.buildId,
-      projectId: this.projectId,
-      branchName: this.config.branchName,
-      ...test,
-    });
-
-    return axios
-      .post(`${this.config.apiUrl}/test-runs/multipart`, data, {
-        headers: {
-          ...data.getHeaders(),
-          "Content-Length": data.getLengthSync(),
-          apiKey: this.config.apiKey,
-        },
-      })
       .then(this.handleResponse)
       .catch(this.handleException);
   }
@@ -139,24 +115,15 @@ export class VisualRegressionTracker {
     }
   }
 
-  async track(test: TestRunBase64 | TestRunMultipart): Promise<TestRunResult> {
-    if (!this.isStarted()) {
-      throw new Error("Visual Regression Tracker has not been started");
-    }
-
-    let testRunResponse;
-    if (instanceOfTestRunBase64(test)) {
-      testRunResponse = await this.submitTestRunBase64(test);
-    } else {
-      testRunResponse = await this.submitTestRunMultipart(test);
-    }
+  async track(test: TestRun): Promise<TestRunResult> {
+    const testRunResponse = await this.submitTestResult(test);
 
     this.processTestRun(testRunResponse);
 
     return new TestRunResult(testRunResponse, this.config.apiUrl);
   }
 
-  private processTestRun(testRunResponse: TestRunResponse) {
+  private processTestRun(testRunResponse: TestRunResponse): void {
     let errorMessage: string | undefined;
     switch (testRunResponse.status) {
       case TestStatus.new: {

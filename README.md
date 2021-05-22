@@ -104,14 +104,10 @@ await vrt.track({
   name: "Image name",
 
   // Base64 encoded string
-  // Required or use imagePath
+  // Required
   imageBase64: image,
 
-  // Path to image (service version api:4.14.0 or higher is required)
-  // Required or use imageBase64
-  imagePath: image,
-
-  // Allowed mismatch % (mismatched pixels to overal pixels count)
+  // Allowed mismatch tollerance in %
   // Optional
   diffTollerancePercent: 0,
 

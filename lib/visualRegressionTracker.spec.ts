@@ -2,17 +2,14 @@ import { VisualRegressionTracker } from "./visualRegressionTracker";
 import {
   Config,
   BuildResponse,
+  TestRun,
   TestRunResponse,
   TestStatus,
-  TestRunBase64,
-  TestRunMultipart,
 } from "./types";
 import { mocked } from "ts-jest/utils";
 import TestRunResult from "./testRunResult";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import * as configHelper from "./helpers/config.helper";
-import * as dtoHelper from "./helpers/dto.helper";
-import FormData from "form-data";
 
 jest.mock("axios");
 const mockedAxios = mocked(axios, true);
@@ -22,9 +19,6 @@ const mockedTestRunResult = mocked(TestRunResult, true);
 
 jest.mock("./helpers/config.helper");
 const mockedConfigHelper = mocked(configHelper);
-
-jest.mock("./helpers/dto.helper");
-const mockedDtoHelper = mocked(dtoHelper);
 
 const axiosError404: AxiosError = {
   isAxiosError: true,
@@ -106,99 +100,53 @@ const config: Config = {
   ciBuildId: "someCIBuildId",
 };
 
-const testRunBase64: TestRunBase64 = {
-  name: "name",
-  imageBase64: "iamge",
-  os: "os",
-  device: "device",
-  viewport: "viewport",
-  browser: "browser",
-  ignoreAreas: [
-    {
-      x: 1,
-      y: 2,
-      height: 300,
-      width: 400,
-    },
-  ],
-};
+describe("VisualRegressionTracker", () => {
+  const fileConfig: Config = {
+    apiUrl: "apiUrlFile",
+    branchName: "branchNameFile",
+    project: "projectFile",
+    apiKey: "apiKeyFile",
+    enableSoftAssert: false,
+    ciBuildId: "ciBuildIdFile",
+  };
+  const envConfig: Config = {
+    apiUrl: "apiUrlEnv",
+    branchName: "branchNameEnv",
+    project: "projectEnv",
+    apiKey: "apiKeyEnv",
+    enableSoftAssert: false,
+    ciBuildId: "ciBuildIdEnv",
+  };
 
-const testRunMultipart: TestRunMultipart = {
-  name: "name",
-  imagePath: "./lib/__data__/2.png",
-  os: "os",
-  device: "device",
-  viewport: "viewport",
-  browser: "browser",
-  ignoreAreas: [
-    {
-      x: 1,
-      y: 2,
-      height: 300,
-      width: 400,
-    },
-  ],
-};
+  beforeEach(() => {
+    mockedConfigHelper.readConfigFromFile.mockReturnValueOnce(fileConfig);
+    mockedConfigHelper.readConfigFromEnv.mockReturnValueOnce(envConfig);
+  });
 
-const testRunResponse: TestRunResponse = {
-  url: "url",
-  status: TestStatus.unresolved,
-  pixelMisMatchCount: 12,
-  diffPercent: 0.12,
-  diffTollerancePercent: 0,
-  id: "some id",
-  imageName: "imageName",
-  merge: false,
-};
+  it("should use explicit config", () => {
+    new VisualRegressionTracker(config);
+
+    expect(mockedConfigHelper.validateConfig).toHaveBeenCalledWith(config);
+  });
+
+  it("should use env over file config", () => {
+    new VisualRegressionTracker();
+
+    expect(mockedConfigHelper.validateConfig).toHaveBeenCalledWith(envConfig);
+  });
+});
 
 describe("VisualRegressionTracker", () => {
   let vrt: VisualRegressionTracker;
 
   beforeEach(async () => {
     vrt = new VisualRegressionTracker(config);
-    mockedAxios.post.mockClear();
-  });
-
-  describe("constructor", () => {
-    const fileConfig: Config = {
-      apiUrl: "apiUrlFile",
-      branchName: "branchNameFile",
-      project: "projectFile",
-      apiKey: "apiKeyFile",
-      enableSoftAssert: false,
-      ciBuildId: "ciBuildIdFile",
-    };
-    const envConfig: Config = {
-      apiUrl: "apiUrlEnv",
-      branchName: "branchNameEnv",
-      project: "projectEnv",
-      apiKey: "apiKeyEnv",
-      enableSoftAssert: false,
-      ciBuildId: "ciBuildIdEnv",
-    };
-
-    beforeEach(() => {
-      mockedConfigHelper.readConfigFromFile.mockReturnValueOnce(fileConfig);
-      mockedConfigHelper.readConfigFromEnv.mockReturnValueOnce(envConfig);
-    });
-
-    it("should use explicit config", () => {
-      new VisualRegressionTracker(config);
-
-      expect(mockedConfigHelper.validateConfig).toHaveBeenCalledWith(config);
-    });
-
-    it("should use env over file config", () => {
-      new VisualRegressionTracker();
-
-      expect(mockedConfigHelper.validateConfig).toHaveBeenCalledWith(envConfig);
-    });
   });
 
   describe.each([
-    ["", "", false],
-    ["some", "", false],
-    ["", "some", false],
+    [undefined, undefined, false],
+    ["some", undefined, false],
+    [undefined, "some", false],
     ["some", "some", true],
   ])("isStarted", (buildId, projectId, expectedResult) => {
     it(`should return ${expectedResult} if buildId ${buildId} projectId ${projectId}`, () => {
@@ -212,48 +160,36 @@ describe("VisualRegressionTracker", () => {
   });
 
   describe("track", () => {
-    it("should throw if not started", async () => {
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(false);
+    const testRun: TestRun = {
+      name: "name",
+      imageBase64: "iamge",
+      os: "os",
+      device: "device",
+      viewport: "viewport",
+      browser: "browser",
+    };
 
-      await expect(
-        vrt.track({
-          name: "name",
-          imageBase64: "image",
-        })
-      ).rejects.toThrowError(
-        new Error("Visual Regression Tracker has not been started")
-      );
-    });
-
-    it("should track base64", async () => {
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      vrt["submitTestRunBase64"] = jest
+    it("should track success", async () => {
+      const testRunResponse: TestRunResponse = {
+        url: "url",
+        status: TestStatus.ok,
+        pixelMisMatchCount: 12,
+        diffPercent: 0.12,
+        diffTollerancePercent: 0,
+        id: "some id",
+        imageName: "imageName",
+        diffName: "diffName",
+        baselineName: "baselineName",
+        merge: false,
+      };
+      vrt["submitTestResult"] = jest
         .fn()
         .mockResolvedValueOnce(testRunResponse);
       vrt["processTestRun"] = jest.fn();
 
-      await vrt.track(testRunBase64);
+      await vrt.track(testRun);
 
-      expect(vrt["submitTestRunBase64"]).toHaveBeenCalledWith(testRunBase64);
-      expect(vrt["processTestRun"]).toHaveBeenCalledWith(testRunResponse);
-      expect(mockedTestRunResult).toHaveBeenCalledWith(
-        testRunResponse,
-        "http://localhost:4200"
-      );
-    });
-
-    it("should track multipart", async () => {
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      vrt["submitTestRunMultipart"] = jest
-        .fn()
-        .mockResolvedValueOnce(testRunResponse);
-      vrt["processTestRun"] = jest.fn();
-
-      await vrt.track(testRunMultipart);
-
-      expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledWith(
-        testRunMultipart
-      );
+      expect(vrt["submitTestResult"]).toHaveBeenCalledWith(testRun);
       expect(vrt["processTestRun"]).toHaveBeenCalledWith(testRunResponse);
       expect(mockedTestRunResult).toHaveBeenCalledWith(
         testRunResponse,
@@ -263,7 +199,7 @@ describe("VisualRegressionTracker", () => {
   });
 
   describe("start", () => {
-    it("should start build", async () => {
+    test("should start build", async () => {
       const buildId = "1312";
       const projectId = "asd";
       const build: BuildResponse = {
@@ -292,7 +228,7 @@ describe("VisualRegressionTracker", () => {
       expect(result).toBe(build);
     });
 
-    it("should handle exception", async () => {
+    test("should handle exception", async () => {
       const handleExceptionMock = jest.fn();
       vrt["handleException"] = handleExceptionMock;
       mockedAxios.post.mockRejectedValueOnce(axiosError401);
@@ -306,7 +242,7 @@ describe("VisualRegressionTracker", () => {
   });
 
   describe("stop", () => {
-    it("should stop build", async () => {
+    test("should stop build", async () => {
       const buildId = "1312";
       vrt["buildId"] = buildId;
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
@@ -325,7 +261,7 @@ describe("VisualRegressionTracker", () => {
       );
     });
 
-    it("should throw if not started", async () => {
+    test("should throw if not started", async () => {
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(false);
 
       await expect(vrt["stop"]()).rejects.toThrowError(
@@ -333,7 +269,7 @@ describe("VisualRegressionTracker", () => {
       );
     });
 
-    it("should handle exception", async () => {
+    test("should handle exception", async () => {
       vrt["buildId"] = "some id";
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
       const handleExceptionMock = jest.fn();
@@ -348,7 +284,7 @@ describe("VisualRegressionTracker", () => {
     });
   });
 
-  describe("submitTestRunBase64", () => {
+  describe("submitTestResults", () => {
     it("should submit test run", async () => {
       const testRunResponse: TestRunResponse = {
         url: "url",
@@ -360,13 +296,29 @@ describe("VisualRegressionTracker", () => {
         imageName: "imageName",
         merge: false,
       };
+      const testRun: TestRun = {
+        name: "name",
+        imageBase64: "image",
+        os: "os",
+        device: "device",
+        viewport: "viewport",
+        browser: "browser",
+        ignoreAreas: [
+          {
+            x: 1,
+            y: 2,
+            height: 300,
+            width: 400,
+          },
+        ],
+      };
       const buildId = "1312";
       const projectId = "asd";
       vrt["buildId"] = buildId;
       vrt["projectId"] = projectId;
       mockedAxios.post.mockResolvedValueOnce({ data: testRunResponse });
 
-      const result = await vrt["submitTestRunBase64"](testRunBase64);
+      const result = await vrt["submitTestResult"](testRun);
 
       expect(result).toBe(testRunResponse);
       expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -375,13 +327,13 @@ describe("VisualRegressionTracker", () => {
           buildId: buildId,
           projectId: projectId,
           branchName: config.branchName,
-          name: testRunBase64.name,
-          imageBase64: testRunBase64.imageBase64,
-          os: testRunBase64.os,
-          device: testRunBase64.device,
-          viewport: testRunBase64.viewport,
-          browser: testRunBase64.browser,
-          ignoreAreas: testRunBase64.ignoreAreas,
+          name: testRun.name,
+          imageBase64: testRun.imageBase64,
+          os: testRun.os,
+          device: testRun.device,
+          viewport: testRun.viewport,
+          browser: testRun.browser,
+          ignoreAreas: testRun.ignoreAreas,
         },
         {
           headers: {
@@ -391,6 +343,19 @@ describe("VisualRegressionTracker", () => {
       );
     });
 
+    test("should throw if not started", async () => {
+      vrt["isStarted"] = jest.fn().mockReturnValueOnce(false);
+
+      await expect(
+        vrt["submitTestResult"]({
+          name: "name",
+          imageBase64: "image",
+        })
+      ).rejects.toThrowError(
+        new Error("Visual Regression Tracker has not been started")
+      );
+    });
+
     it("should handle exception", async () => {
       const handleExceptionMock = jest.fn();
       vrt["handleException"] = handleExceptionMock;
@@ -398,7 +363,7 @@ describe("VisualRegressionTracker", () => {
       mockedAxios.post.mockRejectedValueOnce(axiosError401);
 
       try {
-        await vrt["submitTestRunBase64"]({
+        await vrt["submitTestResult"]({
           name: "name",
           imageBase64: "image",
         });
@@ -408,50 +373,7 @@ describe("VisualRegressionTracker", () => {
     });
   });
 
-  describe("submitTestRunMultipart", () => {
-    it("should submit test run", async () => {
-      const data = new FormData();
-      const buildId = "1312";
-      const projectId = "asd";
-      vrt["buildId"] = buildId;
-      vrt["projectId"] = projectId;
-      mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(data);
-      mockedAxios.post.mockResolvedValueOnce({ data: testRunResponse });
-
-      const result = await vrt["submitTestRunMultipart"](testRunMultipart);
-
-      expect(result).toBe(testRunResponse);
-      expect(mockedDtoHelper.multipartDtoToFormData).toHaveBeenCalledWith({
-        buildId,
-        projectId,
-        branchName: config.branchName,
-        ...testRunMultipart,
-      });
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        `${config.apiUrl}/test-runs/multipart`,
-        data,
-        {
-          headers: expect.objectContaining({
-            apiKey: config.apiKey,
-          }),
-        }
-      );
-    });
-
-    it("should handle exception", async () => {
-      const handleExceptionMock = jest.fn();
-      vrt["handleException"] = handleExceptionMock;
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(new FormData());
-      mockedAxios.post.mockRejectedValueOnce(axiosError401);
-      try {
-        await vrt["submitTestRunMultipart"](testRunMultipart);
-      } catch {}
-      expect(handleExceptionMock).toHaveBeenCalledWith(axiosError401);
-    });
-  });
-
-  it("handleResponse", async () => {
+  test("handleResponse", async () => {
     const build: BuildResponse = {
       id: "id",
       projectId: "projectId",
@@ -495,6 +417,17 @@ describe("VisualRegressionTracker", () => {
     [TestStatus.new, "No baseline: "],
     [TestStatus.unresolved, "Difference found: "],
   ])("processTestRun", (status, expectedMessage) => {
+    const testRunResponse: TestRunResponse = {
+      url: "http://foo.bar",
+      status: TestStatus.ok,
+      pixelMisMatchCount: 12,
+      diffPercent: 0.12,
+      diffTollerancePercent: 0,
+      id: "some id",
+      imageName: "imageName",
+      merge: false,
+    };
+
     beforeEach(() => {
       testRunResponse.status = status;
     });
