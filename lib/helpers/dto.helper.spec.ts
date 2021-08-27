@@ -87,11 +87,6 @@ describe("bufferDtoToFormData", () => {
       },
     ],
   ])("should return form data", (dto: TestRunBufferDto) => {
-    fsMock.createReadStream.mockReturnValueOnce(
-      "mocked Image" as unknown as fs.ReadStream
-    );
-    fsMock.statSync.mockReturnValueOnce({ size: 1234 } as fs.Stats);
-
     const result = bufferDtoToFormData(dto);
 
     expect(result).toMatchSnapshot();
