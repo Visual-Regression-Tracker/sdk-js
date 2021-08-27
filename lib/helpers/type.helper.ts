@@ -1,4 +1,4 @@
-import { TestRunBase64, TestRunBuffer } from "types";
+import { TestRunBase64, TestRunBuffer } from "../types";
 
 export function instanceOfTestRunBase64(object: any): object is TestRunBase64 {
   return "imageBase64" in object;

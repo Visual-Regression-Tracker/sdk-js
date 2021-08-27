@@ -1,4 +1,4 @@
-import { IgnoreArea } from "types/ignoreArea";
+import { IgnoreArea } from "../../types/ignoreArea";
 
 export interface TestRunDto {
   name: string;

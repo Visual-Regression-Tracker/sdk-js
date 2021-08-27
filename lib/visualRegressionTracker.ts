@@ -1,4 +1,6 @@
 import FormData from "form-data";
+import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+
 import {
   Config,
   BuildResponse,
@@ -7,9 +9,9 @@ import {
   TestRunMultipart,
   TestRunBase64,
   TestRunBuffer,
+  TestRunBase64Dto,
 } from "./types";
 import TestRunResult from "./testRunResult";
-import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import {
   instanceOfTestRunBase64,
   readConfigFromEnv,
@@ -19,7 +21,6 @@ import {
   instanceOfTestRunBuffer,
   bufferDtoToFormData,
 } from "./helpers";
-import { TestRunBase64Dto } from "types/request";
 
 export class VisualRegressionTracker {
   private config: Config = {

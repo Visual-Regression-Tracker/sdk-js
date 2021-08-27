@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "fs";
-import { Config } from "types";
+import { Config } from "../types";
 
 const CONFIG_FILE_PATH = "./vrt.json";
 
