@@ -17,3 +17,7 @@ export interface TestRunBase64 extends TestRun {
 export interface TestRunMultipart extends TestRun {
   imagePath: string;
 }
+
+export interface TestRunBuffer extends TestRun {
+  imageBuffer: Buffer;
+}

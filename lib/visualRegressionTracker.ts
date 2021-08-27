@@ -1,3 +1,4 @@
+import FormData from "form-data";
 import {
   Config,
   BuildResponse,
@@ -5,6 +6,7 @@ import {
   TestStatus,
   TestRunMultipart,
   TestRunBase64,
+  TestRunBuffer,
 } from "./types";
 import TestRunResult from "./testRunResult";
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
@@ -14,6 +16,8 @@ import {
   readConfigFromFile,
   multipartDtoToFormData,
   validateConfig,
+  instanceOfTestRunBuffer,
+  bufferDtoToFormData,
 } from "./helpers";
 import { TestRunBase64Dto } from "types/request";
 
@@ -97,15 +101,8 @@ export class VisualRegressionTracker {
   }
 
   private async submitTestRunMultipart(
-    test: TestRunMultipart
+    data: FormData
   ): Promise<TestRunResponse> {
-    const data = multipartDtoToFormData({
-      buildId: this.buildId,
-      projectId: this.projectId,
-      branchName: this.config.branchName,
-      ...test,
-    });
-
     return axios
       .post(`${this.config.apiUrl}/test-runs/multipart`, data, {
         headers: {
@@ -139,7 +136,9 @@ export class VisualRegressionTracker {
     }
   }
 
-  async track(test: TestRunBase64 | TestRunMultipart): Promise<TestRunResult> {
+  async track(
+    test: TestRunBase64 | TestRunMultipart | TestRunBuffer
+  ): Promise<TestRunResult> {
     if (!this.isStarted()) {
       throw new Error("Visual Regression Tracker has not been started");
     }
@@ -148,7 +147,23 @@ export class VisualRegressionTracker {
     if (instanceOfTestRunBase64(test)) {
       testRunResponse = await this.submitTestRunBase64(test);
     } else {
-      testRunResponse = await this.submitTestRunMultipart(test);
+      let formData: FormData;
+      if (instanceOfTestRunBuffer(test)) {
+        formData = bufferDtoToFormData({
+          buildId: this.buildId,
+          projectId: this.projectId,
+          branchName: this.config.branchName,
+          ...test,
+        });
+      } else {
+        formData = multipartDtoToFormData({
+          buildId: this.buildId,
+          projectId: this.projectId,
+          branchName: this.config.branchName,
+          ...test,
+        });
+      }
+      testRunResponse = await this.submitTestRunMultipart(formData);
     }
 
     this.processTestRun(testRunResponse);

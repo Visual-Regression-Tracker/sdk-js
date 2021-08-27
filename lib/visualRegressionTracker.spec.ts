@@ -6,6 +6,7 @@ import {
   TestStatus,
   TestRunBase64,
   TestRunMultipart,
+  TestRunBuffer,
 } from "./types";
 import { mocked } from "ts-jest/utils";
 import TestRunResult from "./testRunResult";
@@ -140,6 +141,23 @@ const testRunMultipart: TestRunMultipart = {
   ],
 };
 
+const testRunBuffer: TestRunBuffer = {
+  name: "name",
+  imageBuffer: Buffer.of(1, 2, 3),
+  os: "os",
+  device: "device",
+  viewport: "viewport",
+  browser: "browser",
+  ignoreAreas: [
+    {
+      x: 1,
+      y: 2,
+      height: 300,
+      width: 400,
+    },
+  ],
+};
+
 const testRunResponse: TestRunResponse = {
   url: "url",
   status: TestStatus.unresolved,
@@ -243,17 +261,56 @@ describe("VisualRegressionTracker", () => {
     });
 
     it("should track multipart", async () => {
+      const data = new FormData();
+      const buildId = "1312";
+      const projectId = "asd";
+      vrt["buildId"] = buildId;
+      vrt["projectId"] = projectId;
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
       vrt["submitTestRunMultipart"] = jest
         .fn()
         .mockResolvedValueOnce(testRunResponse);
       vrt["processTestRun"] = jest.fn();
+      mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(data);
 
       await vrt.track(testRunMultipart);
 
-      expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledWith(
-        testRunMultipart
+      expect(mockedDtoHelper.multipartDtoToFormData).toHaveBeenCalledWith({
+        buildId,
+        projectId,
+        branchName: config.branchName,
+        ...testRunMultipart,
+      });
+      expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledWith(data);
+      expect(vrt["processTestRun"]).toHaveBeenCalledWith(testRunResponse);
+      expect(mockedTestRunResult).toHaveBeenCalledWith(
+        testRunResponse,
+        "http://localhost:4200"
       );
+    });
+
+    it("should track buffer", async () => {
+      const data = new FormData();
+      const buildId = "1312";
+      const projectId = "asd";
+      vrt["buildId"] = buildId;
+      vrt["projectId"] = projectId;
+      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
+      vrt["submitTestRunMultipart"] = jest
+        .fn()
+        .mockResolvedValueOnce(testRunResponse);
+      vrt["processTestRun"] = jest.fn();
+      mockedDtoHelper.bufferDtoToFormData.mockReturnValueOnce(data);
+
+      await vrt.track(testRunBuffer);
+
+      expect(mockedDtoHelper.bufferDtoToFormData).toHaveBeenCalledWith({
+        buildId,
+        projectId,
+        branchName: config.branchName,
+        ...testRunBuffer,
+      });
+      expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledWith(data);
       expect(vrt["processTestRun"]).toHaveBeenCalledWith(testRunResponse);
       expect(mockedTestRunResult).toHaveBeenCalledWith(
         testRunResponse,
@@ -411,22 +468,11 @@ describe("VisualRegressionTracker", () => {
   describe("submitTestRunMultipart", () => {
     it("should submit test run", async () => {
       const data = new FormData();
-      const buildId = "1312";
-      const projectId = "asd";
-      vrt["buildId"] = buildId;
-      vrt["projectId"] = projectId;
-      mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(data);
       mockedAxios.post.mockResolvedValueOnce({ data: testRunResponse });
 
-      const result = await vrt["submitTestRunMultipart"](testRunMultipart);
+      const result = await vrt["submitTestRunMultipart"](data);
 
       expect(result).toBe(testRunResponse);
-      expect(mockedDtoHelper.multipartDtoToFormData).toHaveBeenCalledWith({
-        buildId,
-        projectId,
-        branchName: config.branchName,
-        ...testRunMultipart,
-      });
       expect(mockedAxios.post).toHaveBeenCalledWith(
         `${config.apiUrl}/test-runs/multipart`,
         data,
@@ -442,12 +488,9 @@ describe("VisualRegressionTracker", () => {
       const handleExceptionMock = jest.fn();
       vrt["handleException"] = handleExceptionMock;
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(
-        new FormData()
-      );
       mockedAxios.post.mockRejectedValueOnce(axiosError401);
       try {
-        await vrt["submitTestRunMultipart"](testRunMultipart);
+        await vrt["submitTestRunMultipart"](new FormData());
       } catch {}
       expect(handleExceptionMock).toHaveBeenCalledWith(axiosError401);
     });

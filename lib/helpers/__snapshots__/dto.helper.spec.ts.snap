@@ -1,5 +1,265 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`bufferDtoToFormData should return form data 1`] = `
+FormData {
+  "_checkDataSize": [MockFunction],
+  "_emitError": [MockFunction],
+  "_error": [MockFunction],
+  "_generateBoundary": [MockFunction],
+  "_getContentDisposition": [MockFunction],
+  "_getContentType": [MockFunction],
+  "_getNext": [MockFunction],
+  "_handleErrors": [MockFunction],
+  "_lastBoundary": [MockFunction],
+  "_lengthRetriever": [MockFunction],
+  "_multiPartFooter": [MockFunction],
+  "_multiPartHeader": [MockFunction],
+  "_pipeNext": [MockFunction],
+  "_realGetNext": [MockFunction],
+  "_reset": [MockFunction],
+  "_trackLength": [MockFunction],
+  "_updateDataSize": [MockFunction],
+  "addListener": [MockFunction],
+  "append": [MockFunction] {
+    "calls": Array [
+      Array [
+        "buildId",
+        "buildId",
+      ],
+      Array [
+        "projectId",
+        "projectId",
+      ],
+      Array [
+        "branchName",
+        "develop",
+      ],
+      Array [
+        "name",
+        "name",
+      ],
+      Array [
+        "image",
+        Object {
+          "data": Array [
+            1,
+            2,
+            3,
+          ],
+          "type": "Buffer",
+        },
+        Object {
+          "filename": "image.png",
+        },
+      ],
+      Array [
+        "os",
+        "os",
+      ],
+      Array [
+        "browser",
+        "browser",
+      ],
+      Array [
+        "viewport",
+        "viewport",
+      ],
+      Array [
+        "device",
+        "device",
+      ],
+      Array [
+        "ignoreAreas",
+        "[{\\"x\\":1,\\"y\\":2,\\"height\\":300,\\"width\\":400}]",
+      ],
+      Array [
+        "diffTollerancePercent",
+        0.123,
+      ],
+    ],
+    "results": Array [
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+    ],
+  },
+  "destroy": [MockFunction],
+  "emit": [MockFunction],
+  "end": [MockFunction],
+  "eventNames": [MockFunction],
+  "getBoundary": [MockFunction],
+  "getBuffer": [MockFunction],
+  "getHeaders": [MockFunction],
+  "getLength": [MockFunction],
+  "getLengthSync": [MockFunction],
+  "getMaxListeners": [MockFunction],
+  "hasKnownLength": [MockFunction],
+  "listenerCount": [MockFunction],
+  "listeners": [MockFunction],
+  "once": [MockFunction],
+  "pause": [MockFunction],
+  "pipe": [MockFunction],
+  "prependListener": [MockFunction],
+  "prependOnceListener": [MockFunction],
+  "rawListeners": [MockFunction],
+  "removeAllListeners": [MockFunction],
+  "removeListener": [MockFunction],
+  "resume": [MockFunction],
+  "setBoundary": [MockFunction],
+  "setMaxListeners": [MockFunction],
+  "submit": [MockFunction],
+  "toString": [MockFunction],
+  "write": [MockFunction],
+}
+`;
+
+exports[`bufferDtoToFormData should return form data 2`] = `
+FormData {
+  "_checkDataSize": [MockFunction],
+  "_emitError": [MockFunction],
+  "_error": [MockFunction],
+  "_generateBoundary": [MockFunction],
+  "_getContentDisposition": [MockFunction],
+  "_getContentType": [MockFunction],
+  "_getNext": [MockFunction],
+  "_handleErrors": [MockFunction],
+  "_lastBoundary": [MockFunction],
+  "_lengthRetriever": [MockFunction],
+  "_multiPartFooter": [MockFunction],
+  "_multiPartHeader": [MockFunction],
+  "_pipeNext": [MockFunction],
+  "_realGetNext": [MockFunction],
+  "_reset": [MockFunction],
+  "_trackLength": [MockFunction],
+  "_updateDataSize": [MockFunction],
+  "addListener": [MockFunction],
+  "append": [MockFunction] {
+    "calls": Array [
+      Array [
+        "buildId",
+        "buildId",
+      ],
+      Array [
+        "projectId",
+        "projectId",
+      ],
+      Array [
+        "branchName",
+        "develop",
+      ],
+      Array [
+        "name",
+        "name",
+      ],
+      Array [
+        "image",
+        Object {
+          "data": Array [
+            1,
+            2,
+            3,
+          ],
+          "type": "Buffer",
+        },
+        Object {
+          "filename": "image.png",
+        },
+      ],
+    ],
+    "results": Array [
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
+    ],
+  },
+  "destroy": [MockFunction],
+  "emit": [MockFunction],
+  "end": [MockFunction],
+  "eventNames": [MockFunction],
+  "getBoundary": [MockFunction],
+  "getBuffer": [MockFunction],
+  "getHeaders": [MockFunction],
+  "getLength": [MockFunction],
+  "getLengthSync": [MockFunction],
+  "getMaxListeners": [MockFunction],
+  "hasKnownLength": [MockFunction],
+  "listenerCount": [MockFunction],
+  "listeners": [MockFunction],
+  "once": [MockFunction],
+  "pause": [MockFunction],
+  "pipe": [MockFunction],
+  "prependListener": [MockFunction],
+  "prependOnceListener": [MockFunction],
+  "rawListeners": [MockFunction],
+  "removeAllListeners": [MockFunction],
+  "removeListener": [MockFunction],
+  "resume": [MockFunction],
+  "setBoundary": [MockFunction],
+  "setMaxListeners": [MockFunction],
+  "submit": [MockFunction],
+  "toString": [MockFunction],
+  "write": [MockFunction],
+}
+`;
+
 exports[`multipartDtoToFormData should return form data 1`] = `
 FormData {
   "_checkDataSize": [MockFunction],
