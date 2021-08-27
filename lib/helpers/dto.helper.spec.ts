@@ -1,5 +1,5 @@
 import { multipartDtoToFormData, bufferDtoToFormData } from "./index";
-import { TestRunBufferDto, TestRunMultipartDto } from "types/request";
+import { TestRunBufferDto, TestRunMultipartDto } from "../types";
 import { mocked } from "ts-jest/utils";
 import * as fs from "fs";
 

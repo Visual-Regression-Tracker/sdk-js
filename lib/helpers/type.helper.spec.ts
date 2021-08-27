@@ -1,4 +1,4 @@
-import { TestRunBase64, TestRunMultipart } from "types";
+import { TestRunBase64, TestRunMultipart } from "../types";
 import { instanceOfTestRunBase64 } from "./index";
 
 describe("instanceOfTestRunBase64", () => {

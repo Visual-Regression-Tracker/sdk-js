@@ -1,3 +1,7 @@
+import axios, { AxiosError, AxiosResponse } from "axios";
+import { mocked } from "ts-jest/utils";
+import FormData from "form-data";
+
 import { VisualRegressionTracker } from "./visualRegressionTracker";
 import {
   Config,
@@ -8,12 +12,9 @@ import {
   TestRunMultipart,
   TestRunBuffer,
 } from "./types";
-import { mocked } from "ts-jest/utils";
 import TestRunResult from "./testRunResult";
-import axios, { AxiosError, AxiosResponse } from "axios";
 import * as configHelper from "./helpers/config.helper";
 import * as dtoHelper from "./helpers/dto.helper";
-import FormData from "form-data";
 
 jest.mock("axios");
 const mockedAxios = mocked(axios, true);

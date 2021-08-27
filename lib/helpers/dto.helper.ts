@@ -1,6 +1,6 @@
 import FormData from "form-data";
 import fs from "fs";
-import { TestRunMultipartDto, TestRunBufferDto } from "types/request";
+import { TestRunMultipartDto, TestRunBufferDto } from "../types";
 
 export const multipartDtoToFormData = (dto: TestRunMultipartDto): FormData => {
   const data = new FormData();

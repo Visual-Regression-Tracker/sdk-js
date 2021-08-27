@@ -4,7 +4,7 @@ import {
   validateConfig,
 } from "./config.helper";
 import { mocked } from "ts-jest/utils";
-import { Config } from "types";
+import { Config } from "../types";
 import * as fs from "fs";
 
 jest.mock("fs");
