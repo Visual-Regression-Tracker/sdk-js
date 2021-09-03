@@ -69,6 +69,10 @@ FormData {
         "device",
       ],
       Array [
+        "customTags",
+        "customTags",
+      ],
+      Array [
         "ignoreAreas",
         "[{\\"x\\":1,\\"y\\":2,\\"height\\":300,\\"width\\":400}]",
       ],
@@ -78,6 +82,10 @@ FormData {
       ],
     ],
     "results": Array [
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
       Object {
         "type": "return",
         "value": undefined,
@@ -322,6 +330,10 @@ FormData {
         "device",
       ],
       Array [
+        "customTags",
+        "customTags",
+      ],
+      Array [
         "ignoreAreas",
         "[{\\"x\\":1,\\"y\\":2,\\"height\\":300,\\"width\\":400}]",
       ],
@@ -331,6 +343,10 @@ FormData {
       ],
     ],
     "results": Array [
+      Object {
+        "type": "return",
+        "value": undefined,
+      },
       Object {
         "type": "return",
         "value": undefined,

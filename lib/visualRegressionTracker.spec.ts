@@ -113,6 +113,7 @@ const testRunBase64: TestRunBase64 = {
   imageBase64: "iamge",
   os: "os",
   device: "device",
+  customTags: "customTags",
   viewport: "viewport",
   browser: "browser",
   ignoreAreas: [
@@ -130,6 +131,7 @@ const testRunMultipart: TestRunMultipart = {
   imagePath: "./lib/__data__/2.png",
   os: "os",
   device: "device",
+  customTags: "customTags",
   viewport: "viewport",
   browser: "browser",
   ignoreAreas: [
@@ -147,6 +149,7 @@ const testRunBuffer: TestRunBuffer = {
   imageBuffer: Buffer.of(1, 2, 3),
   os: "os",
   device: "device",
+  customTags: "customTags",
   viewport: "viewport",
   browser: "browser",
   ignoreAreas: [
@@ -437,6 +440,7 @@ describe("VisualRegressionTracker", () => {
           imageBase64: testRunBase64.imageBase64,
           os: testRunBase64.os,
           device: testRunBase64.device,
+          customTags: testRunBase64.customTags,
           viewport: testRunBase64.viewport,
           browser: testRunBase64.browser,
           ignoreAreas: testRunBase64.ignoreAreas,

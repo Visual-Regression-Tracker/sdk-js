@@ -15,6 +15,7 @@ export const multipartDtoToFormData = (dto: TestRunMultipartDto): FormData => {
   dto.browser && data.append("browser", dto.browser);
   dto.viewport && data.append("viewport", dto.viewport);
   dto.device && data.append("device", dto.device);
+  dto.customTags && data.append("customTags", dto.customTags);
   dto.ignoreAreas &&
     data.append("ignoreAreas", JSON.stringify(dto.ignoreAreas));
   dto.diffTollerancePercent &&
@@ -34,6 +35,7 @@ export const bufferDtoToFormData = (dto: TestRunBufferDto): FormData => {
   dto.browser && data.append("browser", dto.browser);
   dto.viewport && data.append("viewport", dto.viewport);
   dto.device && data.append("device", dto.device);
+  dto.customTags && data.append("customTags", dto.customTags);
   dto.ignoreAreas &&
     data.append("ignoreAreas", JSON.stringify(dto.ignoreAreas));
   dto.diffTollerancePercent &&
