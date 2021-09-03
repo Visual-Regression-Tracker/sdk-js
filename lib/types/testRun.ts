@@ -6,6 +6,7 @@ interface TestRun {
   browser?: string;
   viewport?: string;
   device?: string;
+  customTags?: string;
   diffTollerancePercent?: number;
   ignoreAreas?: IgnoreArea[];
 }

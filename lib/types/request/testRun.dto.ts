@@ -11,6 +11,8 @@ export interface TestRunDto {
 
   device?: string;
 
+  customTags?: string;
+
   branchName: string;
 
   buildId: string;

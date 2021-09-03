@@ -127,6 +127,9 @@ await vrt.track({
   // Optional
   device: "PC",
 
+  // Optional
+  customTags: "Cloud, DarkTheme, Auth",
+
   // Array of areas to be ignored
   // Optional
   ignoreAreas: [
