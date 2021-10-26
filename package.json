@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker",
   "dependencies": {
-    "axios": "^0.21.0",
+    "axios": "^0.24.0",
     "form-data": "^4.0.0"
   },
   "devDependencies": {
