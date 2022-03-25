@@ -3,7 +3,7 @@ import {
   readConfigFromFile,
   validateConfig,
 } from "./config.helper";
-import { mocked } from "ts-jest/utils";
+import { mocked } from "jest-mock";
 import { Config } from "../types";
 import * as fs from "fs";
 
