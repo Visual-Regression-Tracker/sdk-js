@@ -44,6 +44,7 @@ export class VisualRegressionTracker {
     this.axiosConfig = {
       headers: {
         apiKey: this.config.apiKey,
+        project: this.config.project,
       },
     };
   }
@@ -109,7 +110,7 @@ export class VisualRegressionTracker {
         headers: {
           ...data.getHeaders(),
           "Content-Length": data.getLengthSync(),
-          apiKey: this.config.apiKey,
+          ...this.axiosConfig.headers,
         },
       })
       .then(this.handleResponse)

@@ -1,6 +1,6 @@
 import { multipartDtoToFormData, bufferDtoToFormData } from "./index";
 import { TestRunBufferDto, TestRunMultipartDto } from "../types";
-import { mocked } from "ts-jest/utils";
+import { mocked } from "jest-mock";
 import * as fs from "fs";
 
 jest.mock("form-data");

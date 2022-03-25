@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
-import { mocked } from "ts-jest/utils";
+import { mocked } from "jest-mock";
 import FormData from "form-data";
 
 import { VisualRegressionTracker } from "./visualRegressionTracker";
@@ -345,6 +345,7 @@ describe("VisualRegressionTracker", () => {
         {
           headers: {
             apiKey: config.apiKey,
+            project: config.project,
           },
         }
       );
@@ -381,6 +382,7 @@ describe("VisualRegressionTracker", () => {
         {
           headers: {
             apiKey: config.apiKey,
+            project: config.project,
           },
         }
       );
@@ -448,6 +450,7 @@ describe("VisualRegressionTracker", () => {
         {
           headers: {
             apiKey: config.apiKey,
+            project: config.project,
           },
         }
       );
@@ -484,6 +487,7 @@ describe("VisualRegressionTracker", () => {
         {
           headers: expect.objectContaining({
             apiKey: config.apiKey,
+            project: config.project,
           }),
         }
       );
