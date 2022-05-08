@@ -20,6 +20,7 @@ export const multipartDtoToFormData = (dto: TestRunMultipartDto): FormData => {
     data.append("ignoreAreas", JSON.stringify(dto.ignoreAreas));
   dto.diffTollerancePercent &&
     data.append("diffTollerancePercent", dto.diffTollerancePercent);
+  dto.comment && data.append("comment", dto.comment);
 
   return data;
 };
@@ -40,6 +41,7 @@ export const bufferDtoToFormData = (dto: TestRunBufferDto): FormData => {
     data.append("ignoreAreas", JSON.stringify(dto.ignoreAreas));
   dto.diffTollerancePercent &&
     data.append("diffTollerancePercent", dto.diffTollerancePercent);
+  dto.comment && data.append("comment", dto.comment);
 
   return data;
 };
