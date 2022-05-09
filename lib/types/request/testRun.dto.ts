@@ -24,4 +24,6 @@ export interface TestRunDto {
   merge?: boolean;
 
   ignoreAreas?: IgnoreArea[];
+
+  comment?: string;
 }

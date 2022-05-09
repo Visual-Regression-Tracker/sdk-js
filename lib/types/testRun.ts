@@ -9,6 +9,7 @@ interface TestRun {
   customTags?: string;
   diffTollerancePercent?: number;
   ignoreAreas?: IgnoreArea[];
+  comment?: string;
 }
 
 export interface TestRunBase64 extends TestRun {

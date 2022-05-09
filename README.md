@@ -151,5 +151,9 @@ await vrt.track({
       height: 400;
     }
   ]
+
+  // Allow additional details
+  // Optional
+  comment: 'Ignoring region because of animation'
 });
 ```

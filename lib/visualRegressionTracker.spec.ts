@@ -142,6 +142,7 @@ const testRunMultipart: TestRunMultipart = {
       width: 400,
     },
   ],
+  comment: "comment",
 };
 
 const testRunBuffer: TestRunBuffer = {
@@ -160,6 +161,7 @@ const testRunBuffer: TestRunBuffer = {
       width: 400,
     },
   ],
+  comment: "comment",
 };
 
 const testRunResponse: TestRunResponse = {
