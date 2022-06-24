@@ -5,7 +5,6 @@ import {
   Config,
   BuildResponse,
   TestRunResponse,
-  TestStatus,
   TestRunMultipart,
   TestRunBase64,
   TestRunBuffer,
@@ -20,6 +19,7 @@ import {
   validateConfig,
   instanceOfTestRunBuffer,
   bufferDtoToFormData,
+  trackWithRetry,
 } from "./helpers";
 
 export class VisualRegressionTracker {
@@ -138,8 +138,16 @@ export class VisualRegressionTracker {
     }
   }
 
+  /**
+   * Submit test data to external VRT service
+   *
+   * @param test Test data to track
+   * @param retryCount Retry count, default is 2
+   * @returns
+   */
   async track(
-    test: TestRunBase64 | TestRunMultipart | TestRunBuffer
+    test: TestRunBase64 | TestRunMultipart | TestRunBuffer,
+    retryCount: number = 2
   ): Promise<TestRunResult> {
     if (!this.isStarted()) {
       throw new Error("Visual Regression Tracker has not been started");
@@ -147,7 +155,11 @@ export class VisualRegressionTracker {
 
     let testRunResponse;
     if (instanceOfTestRunBase64(test)) {
-      testRunResponse = await this.submitTestRunBase64(test);
+      testRunResponse = await trackWithRetry(
+        () => this.submitTestRunBase64(test),
+        retryCount,
+        this.config.enableSoftAssert
+      );
     } else {
       let formData: FormData;
       if (instanceOfTestRunBuffer(test)) {
@@ -165,34 +177,14 @@ export class VisualRegressionTracker {
           ...test,
         });
       }
-      testRunResponse = await this.submitTestRunMultipart(formData);
-    }
 
-    this.processTestRun(testRunResponse);
+      testRunResponse = await trackWithRetry(
+        () => this.submitTestRunMultipart(formData),
+        retryCount,
+        this.config.enableSoftAssert
+      );
+    }
 
     return new TestRunResult(testRunResponse, this.config.apiUrl);
-  }
-
-  private processTestRun(testRunResponse: TestRunResponse) {
-    let errorMessage: string | undefined;
-    switch (testRunResponse.status) {
-      case TestStatus.new: {
-        errorMessage = `No baseline: ${testRunResponse.url}`;
-        break;
-      }
-      case TestStatus.unresolved: {
-        errorMessage = `Difference found: ${testRunResponse.url}`;
-        break;
-      }
-    }
-
-    if (errorMessage) {
-      if (this.config.enableSoftAssert) {
-        // eslint-disable-next-line no-console
-        console.error(errorMessage);
-      } else {
-        throw new Error(errorMessage);
-      }
-    }
   }
 }
