@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { mocked } from "jest-mock";
 import FormData from "form-data";
-
+import { testRunOkResponse, testRunUnresolvedResponse } from "./__data__";
 import { VisualRegressionTracker } from "./visualRegressionTracker";
 import {
   Config,
@@ -164,17 +164,6 @@ const testRunBuffer: TestRunBuffer = {
   comment: "comment",
 };
 
-const testRunResponse: TestRunResponse = {
-  url: "url",
-  status: TestStatus.unresolved,
-  pixelMisMatchCount: 12,
-  diffPercent: 0.12,
-  diffTollerancePercent: 0,
-  id: "some id",
-  imageName: "imageName",
-  merge: false,
-};
-
 describe("VisualRegressionTracker", () => {
   let vrt: VisualRegressionTracker;
 
@@ -249,34 +238,42 @@ describe("VisualRegressionTracker", () => {
       );
     });
 
-    it("should track base64", async () => {
+    it("should track base64 without retry", async () => {
+      const responce = testRunOkResponse;
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      vrt["submitTestRunBase64"] = jest
-        .fn()
-        .mockResolvedValueOnce(testRunResponse);
-      vrt["processTestRun"] = jest.fn();
+      vrt["submitTestRunBase64"] = jest.fn().mockResolvedValue(responce);
 
       await vrt.track(testRunBase64);
 
       expect(vrt["submitTestRunBase64"]).toHaveBeenCalledWith(testRunBase64);
-      expect(vrt["processTestRun"]).toHaveBeenCalledWith(testRunResponse);
+      expect(vrt["submitTestRunBase64"]).toHaveBeenCalledTimes(1);
       expect(mockedTestRunResult).toHaveBeenCalledWith(
-        testRunResponse,
+        responce,
         "http://localhost:4200"
       );
     });
 
-    it("should track multipart", async () => {
+    it("should track base64 with retry", async () => {
+      const responce = testRunUnresolvedResponse;
+      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
+      vrt["submitTestRunBase64"] = jest.fn().mockResolvedValue(responce);
+
+      await expect(vrt.track(testRunBase64, 3)).rejects.toThrowError(
+        "Difference found: url"
+      );
+      expect(vrt["submitTestRunBase64"]).toHaveBeenCalledTimes(4);
+      expect(vrt["submitTestRunBase64"]).toHaveBeenCalledWith(testRunBase64);
+    });
+
+    it("should track multipart without retry", async () => {
+      const responce = testRunOkResponse;
       const data = new FormData();
       const buildId = "1312";
       const projectId = "asd";
       vrt["buildId"] = buildId;
       vrt["projectId"] = projectId;
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      vrt["submitTestRunMultipart"] = jest
-        .fn()
-        .mockResolvedValueOnce(testRunResponse);
-      vrt["processTestRun"] = jest.fn();
+      vrt["submitTestRunMultipart"] = jest.fn().mockResolvedValueOnce(responce);
       mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(data);
 
       await vrt.track(testRunMultipart);
@@ -287,25 +284,47 @@ describe("VisualRegressionTracker", () => {
         branchName: config.branchName,
         ...testRunMultipart,
       });
+      expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledTimes(1);
       expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledWith(data);
-      expect(vrt["processTestRun"]).toHaveBeenCalledWith(testRunResponse);
       expect(mockedTestRunResult).toHaveBeenCalledWith(
-        testRunResponse,
+        responce,
         "http://localhost:4200"
       );
     });
 
-    it("should track buffer", async () => {
+    it("should track multipart with retry", async () => {
+      const responce = testRunUnresolvedResponse;
       const data = new FormData();
       const buildId = "1312";
       const projectId = "asd";
       vrt["buildId"] = buildId;
       vrt["projectId"] = projectId;
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      vrt["submitTestRunMultipart"] = jest
-        .fn()
-        .mockResolvedValueOnce(testRunResponse);
-      vrt["processTestRun"] = jest.fn();
+      vrt["submitTestRunMultipart"] = jest.fn().mockResolvedValue(responce);
+      mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(data);
+
+      await expect(vrt.track(testRunMultipart, 3)).rejects.toThrowError(
+        "Difference found: url"
+      );
+      expect(mockedDtoHelper.multipartDtoToFormData).toHaveBeenCalledWith({
+        buildId,
+        projectId,
+        branchName: config.branchName,
+        ...testRunMultipart,
+      });
+      expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledTimes(4);
+      expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledWith(data);
+    });
+
+    it("should track buffer", async () => {
+      const responce = testRunOkResponse;
+      const data = new FormData();
+      const buildId = "1312";
+      const projectId = "asd";
+      vrt["buildId"] = buildId;
+      vrt["projectId"] = projectId;
+      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
+      vrt["submitTestRunMultipart"] = jest.fn().mockResolvedValueOnce(responce);
       mockedDtoHelper.bufferDtoToFormData.mockReturnValueOnce(data);
 
       await vrt.track(testRunBuffer);
@@ -317,9 +336,8 @@ describe("VisualRegressionTracker", () => {
         ...testRunBuffer,
       });
       expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledWith(data);
-      expect(vrt["processTestRun"]).toHaveBeenCalledWith(testRunResponse);
       expect(mockedTestRunResult).toHaveBeenCalledWith(
-        testRunResponse,
+        responce,
         "http://localhost:4200"
       );
     });
@@ -415,7 +433,7 @@ describe("VisualRegressionTracker", () => {
 
   describe("submitTestRunBase64", () => {
     it("should submit test run", async () => {
-      const testRunResponse: TestRunResponse = {
+      const testRunUnresolvedResponse: TestRunResponse = {
         url: "url",
         status: TestStatus.unresolved,
         pixelMisMatchCount: 12,
@@ -429,11 +447,13 @@ describe("VisualRegressionTracker", () => {
       const projectId = "asd";
       vrt["buildId"] = buildId;
       vrt["projectId"] = projectId;
-      mockedAxios.post.mockResolvedValueOnce({ data: testRunResponse });
+      mockedAxios.post.mockResolvedValueOnce({
+        data: testRunUnresolvedResponse,
+      });
 
       const result = await vrt["submitTestRunBase64"](testRunBase64);
 
-      expect(result).toBe(testRunResponse);
+      expect(result).toBe(testRunUnresolvedResponse);
       expect(mockedAxios.post).toHaveBeenCalledWith(
         `${config.apiUrl}/test-runs`,
         {
@@ -478,11 +498,13 @@ describe("VisualRegressionTracker", () => {
   describe("submitTestRunMultipart", () => {
     it("should submit test run", async () => {
       const data = new FormData();
-      mockedAxios.post.mockResolvedValueOnce({ data: testRunResponse });
+      mockedAxios.post.mockResolvedValueOnce({
+        data: testRunUnresolvedResponse,
+      });
 
       const result = await vrt["submitTestRunMultipart"](data);
 
-      expect(result).toBe(testRunResponse);
+      expect(result).toBe(testRunUnresolvedResponse);
       expect(mockedAxios.post).toHaveBeenCalledWith(
         `${config.apiUrl}/test-runs/multipart`,
         data,
@@ -543,34 +565,6 @@ describe("VisualRegressionTracker", () => {
     it(`Error ${code}`, async () => {
       await expect(vrt["handleException"](error)).rejects.toThrowError(
         expectedMessage
-      );
-    });
-  });
-
-  describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
-    [TestStatus.new, "No baseline: "],
-    [TestStatus.unresolved, "Difference found: "],
-  ])("processTestRun", (status, expectedMessage) => {
-    beforeEach(() => {
-      testRunResponse.status = status;
-    });
-
-    it(`disabled soft assert should throw exception if status ${status}`, () => {
-      vrt["config"].enableSoftAssert = false;
-
-      expect(() => vrt["processTestRun"](testRunResponse)).toThrowError(
-        new Error(expectedMessage.concat(testRunResponse.url))
-      );
-    });
-
-    it(`enabled soft assert should log error if status ${status}`, () => {
-      console.error = jest.fn();
-      vrt["config"].enableSoftAssert = true;
-
-      vrt["processTestRun"](testRunResponse);
-
-      expect(console.error).toHaveBeenCalledWith(
-        expectedMessage.concat(testRunResponse.url)
       );
     });
   });
