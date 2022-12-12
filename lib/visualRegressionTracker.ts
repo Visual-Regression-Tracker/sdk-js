@@ -56,6 +56,7 @@ export class VisualRegressionTracker {
   async start(): Promise<BuildResponse> {
     const data = {
       branchName: this.config.branchName,
+      baselineBranchName: this.config.baselineBranchName,
       project: this.config.project,
       ciBuildId: this.config.ciBuildId,
     };
@@ -93,6 +94,7 @@ export class VisualRegressionTracker {
       buildId: this.buildId,
       projectId: this.projectId,
       branchName: this.config.branchName,
+      baselineBranchName: this.config.baselineBranchName,
       ...test,
     };
 
@@ -167,6 +169,7 @@ export class VisualRegressionTracker {
           buildId: this.buildId,
           projectId: this.projectId,
           branchName: this.config.branchName,
+          baselineBranchName: this.config.baselineBranchName,
           ...test,
         });
       } else {
@@ -174,6 +177,7 @@ export class VisualRegressionTracker {
           buildId: this.buildId,
           projectId: this.projectId,
           branchName: this.config.branchName,
+          baselineBranchName: this.config.baselineBranchName,
           ...test,
         });
       }

@@ -12,6 +12,9 @@ const readConfigFromFile = (config: Config): Config => {
     if (fileConfig.branchName) {
       config.branchName = fileConfig.branchName;
     }
+    if (fileConfig.baselineBranchName) {
+      config.baselineBranchName = fileConfig.baselineBranchName;
+    }
     if (fileConfig.project) {
       config.project = fileConfig.project;
     }
@@ -34,6 +37,9 @@ const readConfigFromEnv = (config: Config): Config => {
   }
   if (process.env["VRT_BRANCHNAME"]) {
     config.branchName = process.env["VRT_BRANCHNAME"];
+  }
+  if (process.env["VRT_BASELINEBRANCHNAME"]) {
+    config.baselineBranchName = process.env["VRT_BASELINEBRANCHNAME"];
   }
   if (process.env["VRT_PROJECT"]) {
     config.project = process.env["VRT_PROJECT"];

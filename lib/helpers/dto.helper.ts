@@ -7,6 +7,7 @@ export const multipartDtoToFormData = (dto: TestRunMultipartDto): FormData => {
   data.append("buildId", dto.buildId);
   data.append("projectId", dto.projectId);
   data.append("branchName", dto.branchName);
+  dto.baselineBranchName && data.append("baselineBranchName", dto.baselineBranchName);
   data.append("name", dto.name);
   data.append("image", fs.createReadStream(dto.imagePath), {
     knownLength: fs.statSync(dto.imagePath).size,
@@ -30,6 +31,7 @@ export const bufferDtoToFormData = (dto: TestRunBufferDto): FormData => {
   data.append("buildId", dto.buildId);
   data.append("projectId", dto.projectId);
   data.append("branchName", dto.branchName);
+  dto.baselineBranchName && data.append("baselineBranchName", dto.baselineBranchName);
   data.append("name", dto.name);
   data.append("image", dto.imageBuffer, { filename: "image.png" });
   dto.os && data.append("os", dto.os);
