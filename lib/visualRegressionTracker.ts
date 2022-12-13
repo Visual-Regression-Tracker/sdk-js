@@ -20,6 +20,7 @@ import {
   instanceOfTestRunBuffer,
   bufferDtoToFormData,
   trackWithRetry,
+  instanceOfTestRunMultipart,
 } from "./helpers";
 
 export class VisualRegressionTracker {
@@ -140,6 +141,29 @@ export class VisualRegressionTracker {
     }
   }
 
+  private getFormData(
+    test: TestRunBase64 | TestRunMultipart | TestRunBuffer
+  ): FormData {
+    if (instanceOfTestRunBuffer(test)) {
+      return bufferDtoToFormData({
+        buildId: this.buildId,
+        projectId: this.projectId,
+        branchName: this.config.branchName,
+        baselineBranchName: this.config.baselineBranchName,
+        ...test,
+      });
+    } else if (instanceOfTestRunMultipart(test)) {
+      return multipartDtoToFormData({
+        buildId: this.buildId,
+        projectId: this.projectId,
+        branchName: this.config.branchName,
+        baselineBranchName: this.config.baselineBranchName,
+        ...test,
+      });
+    }
+    throw new Error("Invalid test run data");
+  }
+
   /**
    * Submit test data to external VRT service
    *
@@ -163,27 +187,8 @@ export class VisualRegressionTracker {
         this.config.enableSoftAssert
       );
     } else {
-      let formData: FormData;
-      if (instanceOfTestRunBuffer(test)) {
-        formData = bufferDtoToFormData({
-          buildId: this.buildId,
-          projectId: this.projectId,
-          branchName: this.config.branchName,
-          baselineBranchName: this.config.baselineBranchName,
-          ...test,
-        });
-      } else {
-        formData = multipartDtoToFormData({
-          buildId: this.buildId,
-          projectId: this.projectId,
-          branchName: this.config.branchName,
-          baselineBranchName: this.config.baselineBranchName,
-          ...test,
-        });
-      }
-
       testRunResponse = await trackWithRetry(
-        () => this.submitTestRunMultipart(formData),
+        () => this.submitTestRunMultipart(this.getFormData(test)),
         retryCount,
         this.config.enableSoftAssert
       );

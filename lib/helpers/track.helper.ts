@@ -44,5 +44,5 @@ export const trackWithRetry = async (
   }
   // eslint-disable-next-line no-console
   console.info(`Diff found... Remaining retry attempts **${retryLimit}**`);
-  return trackWithRetry(trackFn, retryLimit - 1, enableSoftAssert);
+  return trackWithRetry(trackFn, retryLimit - 1, enableSoftAssert);  
 };
