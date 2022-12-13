@@ -1,5 +1,9 @@
 import { TestRunResponse, TestStatus } from "../types";
-import { processTestRun, shouldStopRetry } from "./track.helper";
+import {
+  processTestRun,
+  shouldStopRetry,
+  trackWithRetry,
+} from "./track.helper";
 import {
   testRunOkResponse,
   testRunUnresolvedResponse,
@@ -41,6 +45,57 @@ describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
       expectedMessage.concat(testRunUnresolvedResponse.url)
     );
   });
+});
+
+const unresolvedResponce: TestRunResponse = {
+  id: "someId",
+  imageName: "imageName",
+  diffName: "diffName",
+  baselineName: "baselineName",
+  diffPercent: 1.11,
+  diffTollerancePercent: 2.22,
+  pixelMisMatchCount: 3,
+  status: TestStatus.unresolved,
+  url: "url",
+  merge: true,
+};
+
+const okResponce: TestRunResponse = {
+  ...unresolvedResponce,
+  status: TestStatus.ok,
+};
+
+it("should stop when diff not found", async () => {
+  // .Arrange
+  const trackMock = jest.fn().mockReturnValue(okResponce);
+
+  // .Act
+  await trackWithRetry(trackMock, 5);
+
+  // .Assert
+  expect(trackMock).toBeCalledTimes(1);
+});
+
+it("should stop on default retry limit", async () => {
+  // .Arrange
+  const trackMock = jest.fn().mockReturnValue(unresolvedResponce);
+
+  // .Act
+  await trackWithRetry(trackMock, undefined as unknown as number, true);
+
+  // .Assert
+  expect(trackMock).toBeCalledTimes(3);
+});
+
+it("should stop on custom retry limit", async () => {
+  // .Arrange
+  const trackMock = jest.fn().mockReturnValue(unresolvedResponce);
+
+  // .Act
+  await trackWithRetry(trackMock, 5, true);
+
+  // .Assert
+  expect(trackMock).toBeCalledTimes(6);
 });
 
 it.each<[TestRunResponse, boolean]>([

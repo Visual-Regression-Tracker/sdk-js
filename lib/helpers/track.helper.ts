@@ -34,7 +34,7 @@ export const shouldStopRetry = (result: TestRunResponse) =>
 
 export const trackWithRetry = async (
   trackFn: () => Promise<TestRunResponse>,
-  retryLimit: number,
+  retryLimit: number = 2,
   enableSoftAssert?: boolean
 ): Promise<TestRunResponse> => {
   const result = await trackFn();
@@ -44,5 +44,5 @@ export const trackWithRetry = async (
   }
   // eslint-disable-next-line no-console
   console.info(`Diff found... Remaining retry attempts **${retryLimit}**`);
-  return trackWithRetry(trackFn, retryLimit - 1, enableSoftAssert);  
+  return trackWithRetry(trackFn, retryLimit - 1, enableSoftAssert);
 };
