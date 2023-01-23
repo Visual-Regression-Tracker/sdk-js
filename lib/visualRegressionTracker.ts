@@ -20,6 +20,7 @@ import {
   instanceOfTestRunBuffer,
   bufferDtoToFormData,
   trackWithRetry,
+  instanceOfTestRunMultipart,
 } from "./helpers";
 
 export class VisualRegressionTracker {
@@ -56,6 +57,7 @@ export class VisualRegressionTracker {
   async start(): Promise<BuildResponse> {
     const data = {
       branchName: this.config.branchName,
+      baselineBranchName: this.config.baselineBranchName,
       project: this.config.project,
       ciBuildId: this.config.ciBuildId,
     };
@@ -93,6 +95,7 @@ export class VisualRegressionTracker {
       buildId: this.buildId,
       projectId: this.projectId,
       branchName: this.config.branchName,
+      baselineBranchName: this.config.baselineBranchName,
       ...test,
     };
 
@@ -138,6 +141,29 @@ export class VisualRegressionTracker {
     }
   }
 
+  private getFormData(
+    test: TestRunBase64 | TestRunMultipart | TestRunBuffer
+  ): FormData {
+    if (instanceOfTestRunBuffer(test)) {
+      return bufferDtoToFormData({
+        buildId: this.buildId,
+        projectId: this.projectId,
+        branchName: this.config.branchName,
+        baselineBranchName: this.config.baselineBranchName,
+        ...test,
+      });
+    } else if (instanceOfTestRunMultipart(test)) {
+      return multipartDtoToFormData({
+        buildId: this.buildId,
+        projectId: this.projectId,
+        branchName: this.config.branchName,
+        baselineBranchName: this.config.baselineBranchName,
+        ...test,
+      });
+    }
+    throw new Error("Invalid test run data");
+  }
+
   /**
    * Submit test data to external VRT service
    *
@@ -161,25 +187,8 @@ export class VisualRegressionTracker {
         this.config.enableSoftAssert
       );
     } else {
-      let formData: FormData;
-      if (instanceOfTestRunBuffer(test)) {
-        formData = bufferDtoToFormData({
-          buildId: this.buildId,
-          projectId: this.projectId,
-          branchName: this.config.branchName,
-          ...test,
-        });
-      } else {
-        formData = multipartDtoToFormData({
-          buildId: this.buildId,
-          projectId: this.projectId,
-          branchName: this.config.branchName,
-          ...test,
-        });
-      }
-
       testRunResponse = await trackWithRetry(
-        () => this.submitTestRunMultipart(formData),
+        () => this.submitTestRunMultipart(this.getFormData(test)),
         retryCount,
         this.config.enableSoftAssert
       );

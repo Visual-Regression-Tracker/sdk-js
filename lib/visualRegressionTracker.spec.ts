@@ -102,6 +102,7 @@ const axiosErrorEmptyResponse: AxiosError = {
 const config: Config = {
   apiUrl: "http://localhost:4200",
   branchName: "develop",
+  baselineBranchName: "next-release",
   project: "Default project",
   apiKey: "CPKVK4JNK24NVNPNGVFQ853HXXEG",
   enableSoftAssert: false,
@@ -176,6 +177,7 @@ describe("VisualRegressionTracker", () => {
     const fileConfig: Config = {
       apiUrl: "apiUrlFile",
       branchName: "branchNameFile",
+      baselineBranchName: "baselineBranchNameFile",
       project: "projectFile",
       apiKey: "apiKeyFile",
       enableSoftAssert: false,
@@ -184,6 +186,7 @@ describe("VisualRegressionTracker", () => {
     const envConfig: Config = {
       apiUrl: "apiUrlEnv",
       branchName: "branchNameEnv",
+      baselineBranchName: "baselineBranchNameEnv",
       project: "projectEnv",
       apiKey: "apiKeyEnv",
       enableSoftAssert: false,
@@ -282,6 +285,7 @@ describe("VisualRegressionTracker", () => {
         buildId,
         projectId,
         branchName: config.branchName,
+        baselineBranchName: config.baselineBranchName,
         ...testRunMultipart,
       });
       expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledTimes(1);
@@ -310,6 +314,7 @@ describe("VisualRegressionTracker", () => {
         buildId,
         projectId,
         branchName: config.branchName,
+        baselineBranchName: config.baselineBranchName,
         ...testRunMultipart,
       });
       expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledTimes(4);
@@ -333,6 +338,7 @@ describe("VisualRegressionTracker", () => {
         buildId,
         projectId,
         branchName: config.branchName,
+        baselineBranchName: config.baselineBranchName,
         ...testRunBuffer,
       });
       expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledWith(data);
@@ -359,6 +365,7 @@ describe("VisualRegressionTracker", () => {
         `${config.apiUrl}/builds`,
         {
           branchName: config.branchName,
+          baselineBranchName: config.baselineBranchName,
           project: config.project,
           ciBuildId: config.ciBuildId,
         },
@@ -460,6 +467,7 @@ describe("VisualRegressionTracker", () => {
           buildId: buildId,
           projectId: projectId,
           branchName: config.branchName,
+          baselineBranchName: config.baselineBranchName,
           name: testRunBase64.name,
           imageBase64: testRunBase64.imageBase64,
           os: testRunBase64.os,

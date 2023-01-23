@@ -34,7 +34,7 @@ export const shouldStopRetry = (result: TestRunResponse) =>
 
 export const trackWithRetry = async (
   trackFn: () => Promise<TestRunResponse>,
-  retryLimit: number,
+  retryLimit: number = 2,
   enableSoftAssert?: boolean
 ): Promise<TestRunResponse> => {
   const result = await trackFn();
