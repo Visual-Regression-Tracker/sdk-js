@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosResponse } from "axios";
+import axios, { AxiosError, AxiosHeaders, AxiosResponse } from "axios";
 import { mocked } from "jest-mock";
 import FormData from "form-data";
 import { testRunOkResponse, testRunUnresolvedResponse } from "./__data__";
@@ -17,10 +17,10 @@ import * as configHelper from "./helpers/config.helper";
 import * as dtoHelper from "./helpers/dto.helper";
 
 jest.mock("axios");
-const mockedAxios = mocked(axios, true);
+const mockedAxios = mocked(axios);
 
 jest.mock("./testRunResult");
-const mockedTestRunResult = mocked(TestRunResult, true);
+const mockedTestRunResult = mocked(TestRunResult);
 
 jest.mock("./helpers/config.helper");
 const mockedConfigHelper = mocked(configHelper);
@@ -28,9 +28,12 @@ const mockedConfigHelper = mocked(configHelper);
 jest.mock("./helpers/dto.helper");
 const mockedDtoHelper = mocked(dtoHelper);
 
+const headers = AxiosHeaders.from({
+  'Content-Type': 'application/json'
+});
+
 const axiosError404: AxiosError = {
   isAxiosError: true,
-  config: {},
   toJSON: jest.fn(),
   name: "",
   message: "",
@@ -39,13 +42,12 @@ const axiosError404: AxiosError = {
     data: {},
     statusText: "Not found",
     headers: {},
-    config: {},
+    config: {headers},
   },
 };
 
 const axiosError403: AxiosError = {
   isAxiosError: true,
-  config: {},
   toJSON: jest.fn(),
   name: "",
   message: "",
@@ -54,13 +56,12 @@ const axiosError403: AxiosError = {
     data: {},
     statusText: "Not found",
     headers: {},
-    config: {},
+    config: {headers},
   },
 };
 
 const axiosError401: AxiosError = {
   isAxiosError: true,
-  config: {},
   toJSON: jest.fn(),
   name: "",
   message: "",
@@ -69,13 +70,12 @@ const axiosError401: AxiosError = {
     data: {},
     statusText: "Unauthorized",
     headers: {},
-    config: {},
+    config: {headers},
   },
 };
 
 const axiosErrorUnknown: AxiosError = {
   isAxiosError: true,
-  config: {},
   toJSON: jest.fn(),
   name: "asdas",
   message: "Unknown error",
@@ -86,13 +86,12 @@ const axiosErrorUnknown: AxiosError = {
     },
     statusText: "Internal exception",
     headers: {},
-    config: {},
+    config: {headers},
   },
 };
 
 const axiosErrorEmptyResponse: AxiosError = {
   isAxiosError: true,
-  config: {},
   toJSON: jest.fn(),
   name: "asdas",
   message: "Unknown error",
@@ -546,7 +545,7 @@ describe("VisualRegressionTracker", () => {
       data: build,
       status: 201,
       statusText: "Created",
-      config: {},
+      config: {headers},
       headers: {},
     };
 
