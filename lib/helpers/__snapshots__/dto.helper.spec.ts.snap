@@ -21,112 +21,112 @@ FormData {
   "_updateDataSize": [MockFunction],
   "addListener": [MockFunction],
   "append": [MockFunction] {
-    "calls": Array [
-      Array [
+    "calls": [
+      [
         "buildId",
         "buildId",
       ],
-      Array [
+      [
         "projectId",
         "projectId",
       ],
-      Array [
+      [
         "branchName",
         "develop",
       ],
-      Array [
+      [
         "name",
         "name",
       ],
-      Array [
+      [
         "image",
-        Object {
-          "data": Array [
+        {
+          "data": [
             1,
             2,
             3,
           ],
           "type": "Buffer",
         },
-        Object {
+        {
           "filename": "image.png",
         },
       ],
-      Array [
+      [
         "os",
         "os",
       ],
-      Array [
+      [
         "browser",
         "browser",
       ],
-      Array [
+      [
         "viewport",
         "viewport",
       ],
-      Array [
+      [
         "device",
         "device",
       ],
-      Array [
+      [
         "customTags",
         "customTags",
       ],
-      Array [
+      [
         "ignoreAreas",
-        "[{\\"x\\":1,\\"y\\":2,\\"height\\":300,\\"width\\":400}]",
+        "[{"x":1,"y":2,"height":300,"width":400}]",
       ],
-      Array [
+      [
         "diffTollerancePercent",
         0.123,
       ],
     ],
-    "results": Array [
-      Object {
+    "results": [
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
@@ -183,56 +183,56 @@ FormData {
   "_updateDataSize": [MockFunction],
   "addListener": [MockFunction],
   "append": [MockFunction] {
-    "calls": Array [
-      Array [
+    "calls": [
+      [
         "buildId",
         "buildId",
       ],
-      Array [
+      [
         "projectId",
         "projectId",
       ],
-      Array [
+      [
         "branchName",
         "develop",
       ],
-      Array [
+      [
         "name",
         "name",
       ],
-      Array [
+      [
         "image",
-        Object {
-          "data": Array [
+        {
+          "data": [
             1,
             2,
             3,
           ],
           "type": "Buffer",
         },
-        Object {
+        {
           "filename": "image.png",
         },
       ],
     ],
-    "results": Array [
-      Object {
+    "results": [
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
@@ -289,105 +289,105 @@ FormData {
   "_updateDataSize": [MockFunction],
   "addListener": [MockFunction],
   "append": [MockFunction] {
-    "calls": Array [
-      Array [
+    "calls": [
+      [
         "buildId",
         "buildId",
       ],
-      Array [
+      [
         "projectId",
         "projectId",
       ],
-      Array [
+      [
         "branchName",
         "develop",
       ],
-      Array [
+      [
         "name",
         "name",
       ],
-      Array [
+      [
         "image",
         "mocked Image",
-        Object {
+        {
           "knownLength": 1234,
         },
       ],
-      Array [
+      [
         "os",
         "os",
       ],
-      Array [
+      [
         "browser",
         "browser",
       ],
-      Array [
+      [
         "viewport",
         "viewport",
       ],
-      Array [
+      [
         "device",
         "device",
       ],
-      Array [
+      [
         "customTags",
         "customTags",
       ],
-      Array [
+      [
         "ignoreAreas",
-        "[{\\"x\\":1,\\"y\\":2,\\"height\\":300,\\"width\\":400}]",
+        "[{"x":1,"y":2,"height":300,"width":400}]",
       ],
-      Array [
+      [
         "diffTollerancePercent",
         0.123,
       ],
     ],
-    "results": Array [
-      Object {
+    "results": [
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
@@ -444,49 +444,49 @@ FormData {
   "_updateDataSize": [MockFunction],
   "addListener": [MockFunction],
   "append": [MockFunction] {
-    "calls": Array [
-      Array [
+    "calls": [
+      [
         "buildId",
         "buildId",
       ],
-      Array [
+      [
         "projectId",
         "projectId",
       ],
-      Array [
+      [
         "branchName",
         "develop",
       ],
-      Array [
+      [
         "name",
         "name",
       ],
-      Array [
+      [
         "image",
         "mocked Image",
-        Object {
+        {
           "knownLength": 1234,
         },
       ],
     ],
-    "results": Array [
-      Object {
+    "results": [
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },
-      Object {
+      {
         "type": "return",
         "value": undefined,
       },

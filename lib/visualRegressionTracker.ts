@@ -1,5 +1,5 @@
 import FormData from "form-data";
-import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse, AxiosError, RawAxiosRequestHeaders, AxiosHeaders, AxiosRequestHeaders } from "axios";
 
 import {
   Config,
@@ -108,14 +108,16 @@ export class VisualRegressionTracker {
   private async submitTestRunMultipart(
     data: FormData
   ): Promise<TestRunResponse> {
+    
+    const config: AxiosRequestConfig = {
+      headers: {
+        ...data.getHeaders(),
+        "Content-Length": data.getLengthSync(),
+        ...this.axiosConfig.headers,
+      },
+    };
     return axios
-      .post(`${this.config.apiUrl}/test-runs/multipart`, data, {
-        headers: {
-          ...data.getHeaders(),
-          "Content-Length": data.getLengthSync(),
-          ...this.axiosConfig.headers,
-        },
-      })
+      .post(`${this.config.apiUrl}/test-runs/multipart`, data, config)
       .then(this.handleResponse)
       .catch(this.handleException);
   }
