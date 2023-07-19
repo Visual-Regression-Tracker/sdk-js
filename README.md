@@ -51,6 +51,10 @@ const config: Config = {
   // Unique ID related to one CI build
   // Optional - default null
   ciBuildId: "SOME_UNIQUE_ID",
+
+  // Value for HTTP "Authorization" header to be used with HTTP requests to the backend
+  // Optional - not sent by default 
+  authHeader: "Basic SECRET"
 };
 ```
 
@@ -66,7 +70,8 @@ _Is overriden if ENV variables are present_
   "apiKey": "tXZVHX0EA4YQM1MGDD",
   "ciBuildId": "commit_sha",
   "branchName": "develop",
-  "enableSoftAssert": false
+  "enableSoftAssert": false,
+  "authHeader": "Basic SECRET"
 }
 ```
 
@@ -81,6 +86,7 @@ VRT_APIKEY="tXZVHX0EA4YQM1MGDD"
 VRT_CIBUILDID="commit_sha"
 VRT_BRANCHNAME="develop"
 VRT_ENABLESOFTASSERT=true
+VRT_AUTH_HEADER="Basic SECRET"
 ```
 
 ### Setup

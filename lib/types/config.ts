@@ -6,4 +6,5 @@ export interface Config extends Record<string, any> {
   apiKey: string;
   enableSoftAssert?: boolean;
   ciBuildId?: string;
+  authHeader?: string;
 }

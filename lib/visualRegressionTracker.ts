@@ -46,6 +46,7 @@ export class VisualRegressionTracker {
       headers: {
         apiKey: this.config.apiKey,
         project: this.config.project,
+        ...(this.config.authHeader ? { Authorization: this.config.authHeader } : {})
       },
     };
   }

@@ -27,6 +27,9 @@ const readConfigFromFile = (config: Config): Config => {
     if (fileConfig.enableSoftAssert !== undefined) {
       config.enableSoftAssert = fileConfig.enableSoftAssert;
     }
+    if (fileConfig.authHeader !== undefined) {
+      config.authHeader = fileConfig.authHeader;
+    }
   }
   return config;
 };
@@ -52,6 +55,9 @@ const readConfigFromEnv = (config: Config): Config => {
   }
   if (process.env["VRT_ENABLESOFTASSERT"] !== undefined) {
     config.enableSoftAssert = process.env["VRT_ENABLESOFTASSERT"] === "true";
+  }
+  if (process.env["VRT_AUTH_HEADER"] !== undefined) {
+    config.authHeader = process.env["VRT_AUTH_HEADER"];
   }
   return config;
 };
