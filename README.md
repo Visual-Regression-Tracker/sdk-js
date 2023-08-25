@@ -1,7 +1,7 @@
 # JS SDK for [Visual Regression Tracker](https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker)
 
-[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/b6796a5b10954c69a2151b118e44a5af)](https://www.codacy.com/gh/Visual-Regression-Tracker/sdk-js?utm_source=github.com&utm_medium=referral&utm_content=Visual-Regression-Tracker/sdk-js&utm_campaign=Badge_Coverage)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b9a9e660b0e14c6c9fb38c7cf09ab16c)](https://app.codacy.com/gh/Visual-Regression-Tracker/sdk-js?utm_source=github.com&utm_medium=referral&utm_content=Visual-Regression-Tracker/sdk-js&utm_campaign=Badge_Grade_Dashboard)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Visual-Regression-Tracker_sdk-js&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Visual-Regression-Tracker_sdk-js)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Visual-Regression-Tracker_sdk-js&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Visual-Regression-Tracker_sdk-js)
 
 ## Npm
 
