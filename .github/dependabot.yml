@@ -10,8 +10,3 @@ updates:
       dependency-type: "production"
     prod-deps:
       dependency-type: "development"
-  ignore:
-  - dependency-name: "@types/node"
-    versions:
-    - 19
-    - 20
