@@ -404,7 +404,7 @@ describe("VisualRegressionTracker", () => {
 
       expect(mockedAxios.patch).toHaveBeenCalledWith(
         `${config.apiUrl}/builds/${buildId}`,
-        {},
+        { isRunning: false },
         {
           headers: {
             apiKey: config.apiKey,

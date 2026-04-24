@@ -81,7 +81,7 @@ export class VisualRegressionTracker {
     await axios
       .patch(
         `${this.config.apiUrl}/builds/${this.buildId}`,
-        {},
+        { isRunning: false },
         this.axiosConfig
       )
       .then(this.handleResponse)
