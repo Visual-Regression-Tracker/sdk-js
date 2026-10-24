@@ -170,6 +170,7 @@ describe("VisualRegressionTracker", () => {
   beforeEach(async () => {
     vrt = new VisualRegressionTracker(config);
     mockedAxios.post.mockClear();
+    mockedAxios.patch.mockClear();
   });
 
   describe("constructor", () => {
@@ -404,7 +405,7 @@ describe("VisualRegressionTracker", () => {
 
       expect(mockedAxios.patch).toHaveBeenCalledWith(
         `${config.apiUrl}/builds/${buildId}`,
-        {},
+        { isRunning: false },
         {
           headers: {
             apiKey: config.apiKey,
@@ -412,6 +413,23 @@ describe("VisualRegressionTracker", () => {
           },
         }
       );
+    });
+
+    it("should mark the started build as not running", async () => {
+      const build: BuildResponse = {
+        id: "1312",
+        projectId: "asd",
+      };
+      mockedAxios.post.mockResolvedValueOnce({ data: build });
+      mockedAxios.patch.mockResolvedValueOnce({});
+
+      await vrt.start();
+      await vrt.stop();
+
+      expect(mockedAxios.patch).toHaveBeenCalledTimes(1);
+      const [url, body] = mockedAxios.patch.mock.calls[0];
+      expect(url).toBe(`${config.apiUrl}/builds/${build.id}`);
+      expect(body).toStrictEqual({ isRunning: false });
     });
 
     it("should throw if not started", async () => {
