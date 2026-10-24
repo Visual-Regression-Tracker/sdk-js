@@ -235,7 +235,7 @@ describe("VisualRegressionTracker", () => {
           name: "name",
           imageBase64: "image",
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         new Error("Visual Regression Tracker has not been started")
       );
     });
@@ -260,7 +260,7 @@ describe("VisualRegressionTracker", () => {
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
       vrt["submitTestRunBase64"] = jest.fn().mockResolvedValue(responce);
 
-      await expect(vrt.track(testRunBase64, 3)).rejects.toThrowError(
+      await expect(vrt.track(testRunBase64, 3)).rejects.toThrow(
         "Difference found: url"
       );
       expect(vrt["submitTestRunBase64"]).toHaveBeenCalledTimes(4);
@@ -306,7 +306,7 @@ describe("VisualRegressionTracker", () => {
       vrt["submitTestRunMultipart"] = jest.fn().mockResolvedValue(responce);
       mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(data);
 
-      await expect(vrt.track(testRunMultipart, 3)).rejects.toThrowError(
+      await expect(vrt.track(testRunMultipart, 3)).rejects.toThrow(
         "Difference found: url"
       );
       expect(mockedDtoHelper.multipartDtoToFormData).toHaveBeenCalledWith({
@@ -417,7 +417,7 @@ describe("VisualRegressionTracker", () => {
     it("should throw if not started", async () => {
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(false);
 
-      await expect(vrt["stop"]()).rejects.toThrowError(
+      await expect(vrt["stop"]()).rejects.toThrow(
         new Error("Visual Regression Tracker has not been started")
       );
     });
@@ -570,7 +570,7 @@ describe("VisualRegressionTracker", () => {
     [undefined, axiosErrorEmptyResponse, "No response from server"],
   ])("handleException", (code, error, expectedMessage) => {
     it(`Error ${code}`, async () => {
-      await expect(vrt["handleException"](error)).rejects.toThrowError(
+      await expect(vrt["handleException"](error)).rejects.toThrow(
         expectedMessage
       );
     });

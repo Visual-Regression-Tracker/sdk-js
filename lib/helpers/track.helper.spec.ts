@@ -20,7 +20,7 @@ describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
   });
 
   it(`default soft assert should throw exception if status ${status}`, () => {
-    expect(() => processTestRun(testRunUnresolvedResponse)).toThrowError(
+    expect(() => processTestRun(testRunUnresolvedResponse)).toThrow(
       new Error(expectedMessage.concat(testRunUnresolvedResponse.url))
     );
   });
@@ -30,7 +30,7 @@ describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
 
     expect(() =>
       processTestRun(testRunUnresolvedResponse, enableSoftAssert)
-    ).toThrowError(
+    ).toThrow(
       new Error(expectedMessage.concat(testRunUnresolvedResponse.url))
     );
   });
@@ -73,7 +73,7 @@ it("should stop when diff not found", async () => {
   await trackWithRetry(trackMock, 5);
 
   // .Assert
-  expect(trackMock).toBeCalledTimes(1);
+  expect(trackMock).toHaveBeenCalledTimes(1);
 });
 
 it("should stop on default retry limit", async () => {
@@ -84,7 +84,7 @@ it("should stop on default retry limit", async () => {
   await trackWithRetry(trackMock, undefined as unknown as number, true);
 
   // .Assert
-  expect(trackMock).toBeCalledTimes(3);
+  expect(trackMock).toHaveBeenCalledTimes(3);
 });
 
 it("should stop on custom retry limit", async () => {
@@ -95,7 +95,7 @@ it("should stop on custom retry limit", async () => {
   await trackWithRetry(trackMock, 5, true);
 
   // .Assert
-  expect(trackMock).toBeCalledTimes(6);
+  expect(trackMock).toHaveBeenCalledTimes(6);
 });
 
 it.each<[TestRunResponse, boolean]>([

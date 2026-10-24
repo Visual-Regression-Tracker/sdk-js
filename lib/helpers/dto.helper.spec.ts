@@ -2,11 +2,16 @@ import { multipartDtoToFormData, bufferDtoToFormData } from "./index";
 import { TestRunBufferDto, TestRunMultipartDto } from "../types";
 import { mocked } from "jest-mock";
 import * as fs from "fs";
-
-jest.mock("form-data");
+import FormData from "form-data";
 
 jest.mock("fs");
 const fsMock = mocked(fs);
+
+const appendSpy = jest.spyOn(FormData.prototype, "append");
+
+beforeEach(() => {
+  appendSpy.mockClear();
+});
 
 describe("multipartDtoToFormData", () => {
   it.each([
@@ -50,7 +55,8 @@ describe("multipartDtoToFormData", () => {
 
     const result = multipartDtoToFormData(dto);
 
-    expect(result).toMatchSnapshot();
+    expect(result).toBeInstanceOf(FormData);
+    expect(appendSpy.mock.calls).toMatchSnapshot();
   });
 });
 
@@ -91,6 +97,7 @@ describe("bufferDtoToFormData", () => {
   ])("should return form data", (dto: TestRunBufferDto) => {
     const result = bufferDtoToFormData(dto);
 
-    expect(result).toMatchSnapshot();
+    expect(result).toBeInstanceOf(FormData);
+    expect(appendSpy.mock.calls).toMatchSnapshot();
   });
 });
