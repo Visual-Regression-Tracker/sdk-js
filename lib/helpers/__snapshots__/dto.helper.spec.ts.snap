@@ -1,523 +1,183 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`bufferDtoToFormData should return form data 1`] = `
-FormData {
-  "_checkDataSize": [MockFunction],
-  "_emitError": [MockFunction],
-  "_error": [MockFunction],
-  "_generateBoundary": [MockFunction],
-  "_getContentDisposition": [MockFunction],
-  "_getContentType": [MockFunction],
-  "_getNext": [MockFunction],
-  "_handleErrors": [MockFunction],
-  "_lastBoundary": [MockFunction],
-  "_lengthRetriever": [MockFunction],
-  "_multiPartFooter": [MockFunction],
-  "_multiPartHeader": [MockFunction],
-  "_pipeNext": [MockFunction],
-  "_realGetNext": [MockFunction],
-  "_reset": [MockFunction],
-  "_trackLength": [MockFunction],
-  "_updateDataSize": [MockFunction],
-  "addListener": [MockFunction],
-  "append": [MockFunction] {
-    "calls": [
-      [
-        "buildId",
-        "buildId",
+[
+  [
+    "buildId",
+    "buildId",
+  ],
+  [
+    "projectId",
+    "projectId",
+  ],
+  [
+    "branchName",
+    "develop",
+  ],
+  [
+    "name",
+    "name",
+  ],
+  [
+    "image",
+    {
+      "data": [
+        1,
+        2,
+        3,
       ],
-      [
-        "projectId",
-        "projectId",
-      ],
-      [
-        "branchName",
-        "develop",
-      ],
-      [
-        "name",
-        "name",
-      ],
-      [
-        "image",
-        {
-          "data": [
-            1,
-            2,
-            3,
-          ],
-          "type": "Buffer",
-        },
-        {
-          "filename": "image.png",
-        },
-      ],
-      [
-        "os",
-        "os",
-      ],
-      [
-        "browser",
-        "browser",
-      ],
-      [
-        "viewport",
-        "viewport",
-      ],
-      [
-        "device",
-        "device",
-      ],
-      [
-        "customTags",
-        "customTags",
-      ],
-      [
-        "ignoreAreas",
-        "[{"x":1,"y":2,"height":300,"width":400}]",
-      ],
-      [
-        "diffTollerancePercent",
-        0.123,
-      ],
-    ],
-    "results": [
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-    ],
-  },
-  "destroy": [MockFunction],
-  "emit": [MockFunction],
-  "end": [MockFunction],
-  "eventNames": [MockFunction],
-  "getBoundary": [MockFunction],
-  "getBuffer": [MockFunction],
-  "getHeaders": [MockFunction],
-  "getLength": [MockFunction],
-  "getLengthSync": [MockFunction],
-  "getMaxListeners": [MockFunction],
-  "hasKnownLength": [MockFunction],
-  "listenerCount": [MockFunction],
-  "listeners": [MockFunction],
-  "once": [MockFunction],
-  "pause": [MockFunction],
-  "pipe": [MockFunction],
-  "prependListener": [MockFunction],
-  "prependOnceListener": [MockFunction],
-  "rawListeners": [MockFunction],
-  "removeAllListeners": [MockFunction],
-  "removeListener": [MockFunction],
-  "resume": [MockFunction],
-  "setBoundary": [MockFunction],
-  "setMaxListeners": [MockFunction],
-  "submit": [MockFunction],
-  "toString": [MockFunction],
-  "write": [MockFunction],
-}
+      "type": "Buffer",
+    },
+    {
+      "filename": "image.png",
+    },
+  ],
+  [
+    "os",
+    "os",
+  ],
+  [
+    "browser",
+    "browser",
+  ],
+  [
+    "viewport",
+    "viewport",
+  ],
+  [
+    "device",
+    "device",
+  ],
+  [
+    "customTags",
+    "customTags",
+  ],
+  [
+    "ignoreAreas",
+    "[{"x":1,"y":2,"height":300,"width":400}]",
+  ],
+  [
+    "diffTollerancePercent",
+    0.123,
+  ],
+]
 `;
 
 exports[`bufferDtoToFormData should return form data 2`] = `
-FormData {
-  "_checkDataSize": [MockFunction],
-  "_emitError": [MockFunction],
-  "_error": [MockFunction],
-  "_generateBoundary": [MockFunction],
-  "_getContentDisposition": [MockFunction],
-  "_getContentType": [MockFunction],
-  "_getNext": [MockFunction],
-  "_handleErrors": [MockFunction],
-  "_lastBoundary": [MockFunction],
-  "_lengthRetriever": [MockFunction],
-  "_multiPartFooter": [MockFunction],
-  "_multiPartHeader": [MockFunction],
-  "_pipeNext": [MockFunction],
-  "_realGetNext": [MockFunction],
-  "_reset": [MockFunction],
-  "_trackLength": [MockFunction],
-  "_updateDataSize": [MockFunction],
-  "addListener": [MockFunction],
-  "append": [MockFunction] {
-    "calls": [
-      [
-        "buildId",
-        "buildId",
+[
+  [
+    "buildId",
+    "buildId",
+  ],
+  [
+    "projectId",
+    "projectId",
+  ],
+  [
+    "branchName",
+    "develop",
+  ],
+  [
+    "name",
+    "name",
+  ],
+  [
+    "image",
+    {
+      "data": [
+        1,
+        2,
+        3,
       ],
-      [
-        "projectId",
-        "projectId",
-      ],
-      [
-        "branchName",
-        "develop",
-      ],
-      [
-        "name",
-        "name",
-      ],
-      [
-        "image",
-        {
-          "data": [
-            1,
-            2,
-            3,
-          ],
-          "type": "Buffer",
-        },
-        {
-          "filename": "image.png",
-        },
-      ],
-    ],
-    "results": [
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-    ],
-  },
-  "destroy": [MockFunction],
-  "emit": [MockFunction],
-  "end": [MockFunction],
-  "eventNames": [MockFunction],
-  "getBoundary": [MockFunction],
-  "getBuffer": [MockFunction],
-  "getHeaders": [MockFunction],
-  "getLength": [MockFunction],
-  "getLengthSync": [MockFunction],
-  "getMaxListeners": [MockFunction],
-  "hasKnownLength": [MockFunction],
-  "listenerCount": [MockFunction],
-  "listeners": [MockFunction],
-  "once": [MockFunction],
-  "pause": [MockFunction],
-  "pipe": [MockFunction],
-  "prependListener": [MockFunction],
-  "prependOnceListener": [MockFunction],
-  "rawListeners": [MockFunction],
-  "removeAllListeners": [MockFunction],
-  "removeListener": [MockFunction],
-  "resume": [MockFunction],
-  "setBoundary": [MockFunction],
-  "setMaxListeners": [MockFunction],
-  "submit": [MockFunction],
-  "toString": [MockFunction],
-  "write": [MockFunction],
-}
+      "type": "Buffer",
+    },
+    {
+      "filename": "image.png",
+    },
+  ],
+]
 `;
 
 exports[`multipartDtoToFormData should return form data 1`] = `
-FormData {
-  "_checkDataSize": [MockFunction],
-  "_emitError": [MockFunction],
-  "_error": [MockFunction],
-  "_generateBoundary": [MockFunction],
-  "_getContentDisposition": [MockFunction],
-  "_getContentType": [MockFunction],
-  "_getNext": [MockFunction],
-  "_handleErrors": [MockFunction],
-  "_lastBoundary": [MockFunction],
-  "_lengthRetriever": [MockFunction],
-  "_multiPartFooter": [MockFunction],
-  "_multiPartHeader": [MockFunction],
-  "_pipeNext": [MockFunction],
-  "_realGetNext": [MockFunction],
-  "_reset": [MockFunction],
-  "_trackLength": [MockFunction],
-  "_updateDataSize": [MockFunction],
-  "addListener": [MockFunction],
-  "append": [MockFunction] {
-    "calls": [
-      [
-        "buildId",
-        "buildId",
-      ],
-      [
-        "projectId",
-        "projectId",
-      ],
-      [
-        "branchName",
-        "develop",
-      ],
-      [
-        "name",
-        "name",
-      ],
-      [
-        "image",
-        "mocked Image",
-        {
-          "knownLength": 1234,
-        },
-      ],
-      [
-        "os",
-        "os",
-      ],
-      [
-        "browser",
-        "browser",
-      ],
-      [
-        "viewport",
-        "viewport",
-      ],
-      [
-        "device",
-        "device",
-      ],
-      [
-        "customTags",
-        "customTags",
-      ],
-      [
-        "ignoreAreas",
-        "[{"x":1,"y":2,"height":300,"width":400}]",
-      ],
-      [
-        "diffTollerancePercent",
-        0.123,
-      ],
-    ],
-    "results": [
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-    ],
-  },
-  "destroy": [MockFunction],
-  "emit": [MockFunction],
-  "end": [MockFunction],
-  "eventNames": [MockFunction],
-  "getBoundary": [MockFunction],
-  "getBuffer": [MockFunction],
-  "getHeaders": [MockFunction],
-  "getLength": [MockFunction],
-  "getLengthSync": [MockFunction],
-  "getMaxListeners": [MockFunction],
-  "hasKnownLength": [MockFunction],
-  "listenerCount": [MockFunction],
-  "listeners": [MockFunction],
-  "once": [MockFunction],
-  "pause": [MockFunction],
-  "pipe": [MockFunction],
-  "prependListener": [MockFunction],
-  "prependOnceListener": [MockFunction],
-  "rawListeners": [MockFunction],
-  "removeAllListeners": [MockFunction],
-  "removeListener": [MockFunction],
-  "resume": [MockFunction],
-  "setBoundary": [MockFunction],
-  "setMaxListeners": [MockFunction],
-  "submit": [MockFunction],
-  "toString": [MockFunction],
-  "write": [MockFunction],
-}
+[
+  [
+    "buildId",
+    "buildId",
+  ],
+  [
+    "projectId",
+    "projectId",
+  ],
+  [
+    "branchName",
+    "develop",
+  ],
+  [
+    "name",
+    "name",
+  ],
+  [
+    "image",
+    "mocked Image",
+    {
+      "knownLength": 1234,
+    },
+  ],
+  [
+    "os",
+    "os",
+  ],
+  [
+    "browser",
+    "browser",
+  ],
+  [
+    "viewport",
+    "viewport",
+  ],
+  [
+    "device",
+    "device",
+  ],
+  [
+    "customTags",
+    "customTags",
+  ],
+  [
+    "ignoreAreas",
+    "[{"x":1,"y":2,"height":300,"width":400}]",
+  ],
+  [
+    "diffTollerancePercent",
+    0.123,
+  ],
+]
 `;
 
 exports[`multipartDtoToFormData should return form data 2`] = `
-FormData {
-  "_checkDataSize": [MockFunction],
-  "_emitError": [MockFunction],
-  "_error": [MockFunction],
-  "_generateBoundary": [MockFunction],
-  "_getContentDisposition": [MockFunction],
-  "_getContentType": [MockFunction],
-  "_getNext": [MockFunction],
-  "_handleErrors": [MockFunction],
-  "_lastBoundary": [MockFunction],
-  "_lengthRetriever": [MockFunction],
-  "_multiPartFooter": [MockFunction],
-  "_multiPartHeader": [MockFunction],
-  "_pipeNext": [MockFunction],
-  "_realGetNext": [MockFunction],
-  "_reset": [MockFunction],
-  "_trackLength": [MockFunction],
-  "_updateDataSize": [MockFunction],
-  "addListener": [MockFunction],
-  "append": [MockFunction] {
-    "calls": [
-      [
-        "buildId",
-        "buildId",
-      ],
-      [
-        "projectId",
-        "projectId",
-      ],
-      [
-        "branchName",
-        "develop",
-      ],
-      [
-        "name",
-        "name",
-      ],
-      [
-        "image",
-        "mocked Image",
-        {
-          "knownLength": 1234,
-        },
-      ],
-    ],
-    "results": [
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-      {
-        "type": "return",
-        "value": undefined,
-      },
-    ],
-  },
-  "destroy": [MockFunction],
-  "emit": [MockFunction],
-  "end": [MockFunction],
-  "eventNames": [MockFunction],
-  "getBoundary": [MockFunction],
-  "getBuffer": [MockFunction],
-  "getHeaders": [MockFunction],
-  "getLength": [MockFunction],
-  "getLengthSync": [MockFunction],
-  "getMaxListeners": [MockFunction],
-  "hasKnownLength": [MockFunction],
-  "listenerCount": [MockFunction],
-  "listeners": [MockFunction],
-  "once": [MockFunction],
-  "pause": [MockFunction],
-  "pipe": [MockFunction],
-  "prependListener": [MockFunction],
-  "prependOnceListener": [MockFunction],
-  "rawListeners": [MockFunction],
-  "removeAllListeners": [MockFunction],
-  "removeListener": [MockFunction],
-  "resume": [MockFunction],
-  "setBoundary": [MockFunction],
-  "setMaxListeners": [MockFunction],
-  "submit": [MockFunction],
-  "toString": [MockFunction],
-  "write": [MockFunction],
-}
+[
+  [
+    "buildId",
+    "buildId",
+  ],
+  [
+    "projectId",
+    "projectId",
+  ],
+  [
+    "branchName",
+    "develop",
+  ],
+  [
+    "name",
+    "name",
+  ],
+  [
+    "image",
+    "mocked Image",
+    {
+      "knownLength": 1234,
+    },
+  ],
+]
 `;

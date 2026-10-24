@@ -117,7 +117,7 @@ describe("config.helper", () => {
   });
   describe("validateConfig", () => {
     it("valid", () => {
-      expect(() => validateConfig(initialConfig)).not.toThrowError();
+      expect(() => validateConfig(initialConfig)).not.toThrow();
     });
 
     it.each([
@@ -150,7 +150,7 @@ describe("config.helper", () => {
         "apiKey is not specified",
       ],
     ])(`should throw if not valid config`, (notValidConfig, errorMessage) => {
-      expect(() => validateConfig(notValidConfig)).toThrowError(
+      expect(() => validateConfig(notValidConfig)).toThrow(
         new Error(errorMessage)
       );
     });
