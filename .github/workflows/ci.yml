@@ -21,6 +21,8 @@ jobs:
         run: npm run test:cov
 
       - name: SonarCloud Scan
+        # Coverage upload only: do not fail the build when SonarCloud rejects the token
+        continue-on-error: true
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
