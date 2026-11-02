@@ -7,7 +7,7 @@ The [Playwright](https://github.com/Visual-Regression-Tracker/agent-playwright),
 
 ## Requirements
 
-- Node.js 18 or later
+- Node.js 26 or later
 - Visual Regression Tracker server 5.0.8 or later; 6 is recommended
 
 ## Install
