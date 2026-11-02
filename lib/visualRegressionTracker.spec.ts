@@ -821,4 +821,11 @@ describe("VisualRegressionTracker", () => {
       expect(thrown).not.toBeInstanceOf(ServerError);
     });
   });
+  it("creates no HTTP agent while the module loads, so browser bundles can import it", () => {
+    const agent = jest.spyOn(http, "Agent");
+
+    jest.isolateModules(() => require("./visualRegressionTracker"));
+
+    expect(agent).not.toHaveBeenCalled();
+  });
 });
