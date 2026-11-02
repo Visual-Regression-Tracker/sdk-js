@@ -39,7 +39,7 @@ const errorHint = (
   status: number,
   url: string,
   retryAfter: string | undefined,
-  hasServerMessage: boolean
+  serverReason: string | undefined
 ): string | undefined => {
   switch (status) {
     case 401:
@@ -47,7 +47,9 @@ const errorHint = (
     case 403:
       return "Check that the apiKey's user has access to the project.";
     case 404:
-      return hasServerMessage ? undefined : "Check apiUrl and project.";
+      return serverReason && !/^Cannot [A-Z]+ \//.test(serverReason)
+        ? undefined
+        : "Check apiUrl and project.";
     case 409:
       return "Another change to the same build or project is in progress; try again.";
     case 413:
@@ -170,7 +172,7 @@ export class VisualRegressionTracker {
   }
 
   private async handleException(error: AxiosError): Promise<never> {
-    const url = error.config?.url ?? "";
+    const url = (error.config?.url ?? "").replace(/\/\/[^/@]*@/, "//");
     const request = error.config
       ? `${error.config.method?.toUpperCase()} ${url}`
       : "VRT request";
@@ -185,7 +187,7 @@ export class VisualRegressionTracker {
     const { status, data, statusText, headers } = error.response;
     const fromServer = serverMessage(data);
     const detail = fromServer || statusText || error.message;
-    const hint = errorHint(status, url, headers["retry-after"], !!fromServer);
+    const hint = errorHint(status, url, headers["retry-after"], fromServer);
     const text = hint ? `${detail.replace(/\.$/, "")}. ${hint}` : detail;
     throw new Error(`${request} returned ${status}: ${text}`);
   }

@@ -605,6 +605,22 @@ describe("VisualRegressionTracker", () => {
         `${request} returned 404: Not Found. Check apiUrl and project.`,
       ],
       [
+        "404 for a missing route asks to check apiUrl",
+        axiosError(404, errorBody(404, "Cannot POST /test-runs")),
+        `${request} returned 404: Cannot POST /test-runs. Check apiUrl and project.`,
+      ],
+      [
+        "credentials in apiUrl are not shown",
+        axiosError(
+          401,
+          errorBody(401, "Unauthorized"),
+          {},
+          "",
+          "https://ci:s3cret@vrt.example.com/api/test-runs"
+        ),
+        `POST https://vrt.example.com/api/test-runs returned 401: Unauthorized. Check apiKey.`,
+      ],
+      [
         "server message ending with a period is not doubled",
         axiosError(409, errorBody(409, "Nothing to revert.")),
         `${request} returned 409: Nothing to revert. Another change to the same build or project is in progress; try again.`,
