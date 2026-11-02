@@ -1,5 +1,7 @@
+import http from "http";
+import https from "https";
 import FormData from "form-data";
-import axios, { AxiosRequestConfig, AxiosResponse, AxiosError, RawAxiosRequestHeaders, AxiosHeaders, AxiosRequestHeaders } from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
 import {
   Config,
@@ -23,6 +25,23 @@ import {
   trackWithRetry,
   instanceOfTestRunMultipart,
 } from "./helpers";
+import {
+  CONNECT_TIMEOUT_SECONDS,
+  DEFAULT_HTTP_TIMEOUT_SECONDS,
+  sendWithRetry,
+  withConnectTimeout,
+} from "./helpers/http.helper";
+
+export class ServerError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly serverMessage?: string
+  ) {
+    super(message);
+    this.name = "ServerError";
+  }
+}
 
 const serverMessage = (data: unknown): string | undefined => {
   if (!data || typeof data !== "object") {
@@ -93,6 +112,16 @@ export class VisualRegressionTracker {
         apiKey: this.config.apiKey,
         project: this.config.project,
       },
+      timeout:
+        (this.config.httpTimeoutInSeconds ?? DEFAULT_HTTP_TIMEOUT_SECONDS) * 1000,
+      httpAgent: withConnectTimeout(
+        new http.Agent({ keepAlive: true }),
+        CONNECT_TIMEOUT_SECONDS
+      ),
+      httpsAgent: withConnectTimeout(
+        new https.Agent({ keepAlive: true }),
+        CONNECT_TIMEOUT_SECONDS
+      ),
     };
   }
 
@@ -107,15 +136,13 @@ export class VisualRegressionTracker {
       ciBuildId: this.config.ciBuildId,
     };
 
-    return axios
-      .post(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
-      .then(this.handleResponse)
-      .catch(this.handleException)
-      .then((build: BuildResponse) => {
-        this.buildId = build.id;
-        this.projectId = build.projectId;
-        return build;
-      });
+    return this.send<BuildResponse>(() =>
+      axios.post(`${this.config.apiUrl}/builds`, data, this.axiosConfig)
+    ).then((build) => {
+      this.buildId = build.id;
+      this.projectId = build.projectId;
+      return build;
+    });
   }
 
   async stop() {
@@ -123,14 +150,13 @@ export class VisualRegressionTracker {
       throw new Error("Visual Regression Tracker has not been started");
     }
 
-    await axios
-      .patch(
+    await this.send(() =>
+      axios.patch(
         `${this.config.apiUrl}/builds/${this.buildId}`,
         { isRunning: false },
         this.axiosConfig
       )
-      .then(this.handleResponse)
-      .catch(this.handleException);
+    );
   }
 
   private async submitTestRunBase64(
@@ -144,25 +170,29 @@ export class VisualRegressionTracker {
       ...test,
     };
 
-    return axios
-      .post(`${this.config.apiUrl}/test-runs`, data, this.axiosConfig)
-      .then(this.handleResponse)
-      .catch(this.handleException);
+    return this.send(() =>
+      axios.post(`${this.config.apiUrl}/test-runs`, data, this.axiosConfig)
+    );
   }
 
   private async submitTestRunMultipart(
-    data: FormData
+    test: TestRunMultipart | TestRunBuffer
   ): Promise<TestRunResponse> {
-    
-    const config: AxiosRequestConfig = {
-      headers: {
-        ...data.getHeaders(),
-        "Content-Length": data.getLengthSync(),
-        ...this.axiosConfig.headers,
-      },
-    };
-    return axios
-      .post(`${this.config.apiUrl}/test-runs/multipart`, data, config)
+    return this.send(() => {
+      const data = this.getFormData(test);
+      return axios.post(`${this.config.apiUrl}/test-runs/multipart`, data, {
+        ...this.axiosConfig,
+        headers: {
+          ...data.getHeaders(),
+          "Content-Length": data.getLengthSync(),
+          ...this.axiosConfig.headers,
+        },
+      });
+    });
+  }
+
+  private send<T>(request: () => Promise<AxiosResponse<T>>): Promise<T> {
+    return sendWithRetry(request)
       .then(this.handleResponse)
       .catch(this.handleException);
   }
@@ -189,12 +219,10 @@ export class VisualRegressionTracker {
     const detail = fromServer || statusText || error.message;
     const hint = errorHint(status, url, headers["retry-after"], fromServer);
     const text = hint ? `${detail.replace(/\.$/, "")}. ${hint}` : detail;
-    throw new Error(`${request} returned ${status}: ${text}`);
+    throw new ServerError(`${request} returned ${status}: ${text}`, status, fromServer);
   }
 
-  private getFormData(
-    test: TestRunBase64 | TestRunMultipart | TestRunBuffer
-  ): FormData {
+  private getFormData(test: TestRunMultipart | TestRunBuffer): FormData {
     if (instanceOfTestRunBuffer(test)) {
       return bufferDtoToFormData({
         buildId: this.buildId,
@@ -239,7 +267,7 @@ export class VisualRegressionTracker {
       );
     } else {
       testRunResponse = await trackWithRetry(
-        () => this.submitTestRunMultipart(this.getFormData(test)),
+        () => this.submitTestRunMultipart(test),
         retryCount,
         this.config.enableSoftAssert
       );

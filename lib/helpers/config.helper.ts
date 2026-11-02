@@ -46,6 +46,9 @@ const readConfigFromFile = (config: Config): Config => {
     if (fileConfig.enableSoftAssert !== undefined) {
       config.enableSoftAssert = fileConfig.enableSoftAssert;
     }
+    if (fileConfig.httpTimeoutInSeconds !== undefined) {
+      config.httpTimeoutInSeconds = fileConfig.httpTimeoutInSeconds;
+    }
   }
   return config;
 };
@@ -76,6 +79,9 @@ const readConfigFromEnv = (config: Config): Config => {
   if (process.env["VRT_ENABLESOFTASSERT"] !== undefined) {
     config.enableSoftAssert = process.env["VRT_ENABLESOFTASSERT"] === "true";
   }
+  if (process.env["VRT_HTTPTIMEOUTINSECONDS"]) {
+    config.httpTimeoutInSeconds = Number(process.env["VRT_HTTPTIMEOUTINSECONDS"]);
+  }
   return config;
 };
 
@@ -102,6 +108,15 @@ const validateConfig = (config: Config): void => {
   }
   if (!config.project) {
     throw new Error("project is not specified");
+  }
+  const timeout = config.httpTimeoutInSeconds;
+  if (
+    timeout !== undefined &&
+    !(typeof timeout === "number" && Number.isFinite(timeout) && timeout >= 0)
+  ) {
+    throw new Error(
+      "httpTimeoutInSeconds must be a non-negative number of seconds, 0 for no limit"
+    );
   }
 };
 

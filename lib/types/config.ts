@@ -8,4 +8,6 @@ export interface Config extends Record<string, any> {
   apiKey: string;
   enableSoftAssert?: boolean;
   ciBuildId?: string;
+  /** Read timeout per request; 0 means no limit. Default 360 */
+  httpTimeoutInSeconds?: number;
 }
