@@ -11,16 +11,16 @@ import {
   testRunNewResponse,
 } from "../__data__";
 
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
   [TestStatus.new, "No baseline: "],
   [TestStatus.unresolved, "Difference found: "],
 ])("processTestRun", (status, expectedMessage) => {
   beforeEach(() => {
     testRunUnresolvedResponse.status = status;
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
   });
 
   it(`default soft assert should throw exception if status ${status}`, () => {
@@ -75,15 +75,11 @@ describe("processTestRun with a status that does not fail the test", () => {
     jest.spyOn(console, "error").mockImplementation();
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
   it.each([TestStatus.ok, TestStatus.approved, TestStatus.autoApproved])(
     "passes %s without logging",
     (status) => {
       expect(() =>
-        processTestRun({ ...unresolvedResponce, status })
+        processTestRun({ ...testRunOkResponse, status })
       ).not.toThrow();
       expect(console.warn).not.toHaveBeenCalled();
       expect(console.error).not.toHaveBeenCalled();
@@ -92,7 +88,7 @@ describe("processTestRun with a status that does not fail the test", () => {
 
   it("warns about a rejected test run without throwing", () => {
     expect(() =>
-      processTestRun({ ...unresolvedResponce, status: TestStatus.failed })
+      processTestRun({ ...testRunOkResponse, status: TestStatus.failed })
     ).not.toThrow();
     expect(console.warn).toHaveBeenCalledWith("Rejected: url");
   });
@@ -101,7 +97,7 @@ describe("processTestRun with a status that does not fail the test", () => {
     const status = "someFutureStatus" as TestStatus;
 
     expect(() =>
-      processTestRun({ ...unresolvedResponce, status })
+      processTestRun({ ...testRunOkResponse, status })
     ).not.toThrow();
     expect(console.warn).toHaveBeenCalledWith(
       'Unknown test run status "someFutureStatus": url'

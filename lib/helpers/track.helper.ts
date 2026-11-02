@@ -1,34 +1,29 @@
 import { TestRunResponse, TestStatus } from "../types";
 
-const getErrorMessage = (
+const getOutcome = (
   testRunResponse: TestRunResponse
-): string | undefined => {
-  switch (testRunResponse.status) {
+): { fails: boolean; message: string } | undefined => {
+  const { status, url } = testRunResponse;
+  switch (status) {
     case TestStatus.new: {
-      return `No baseline: ${testRunResponse.url}`;
+      return { fails: true, message: `No baseline: ${url}` };
     }
     case TestStatus.unresolved: {
-      return `Difference found: ${testRunResponse.url}`;
+      return { fails: true, message: `Difference found: ${url}` };
     }
-  }
-};
-
-const getWarningMessage = (
-  testRunResponse: TestRunResponse
-): string | undefined => {
-  switch (testRunResponse.status) {
-    case TestStatus.new:
     case TestStatus.ok:
-    case TestStatus.unresolved:
     case TestStatus.approved:
     case TestStatus.autoApproved: {
       return undefined;
     }
     case TestStatus.failed: {
-      return `Rejected: ${testRunResponse.url}`;
+      return { fails: false, message: `Rejected: ${url}` };
     }
     default: {
-      return `Unknown test run status "${testRunResponse.status}": ${testRunResponse.url}`;
+      return {
+        fails: false,
+        message: `Unknown test run status "${status}": ${url}`,
+      };
     }
   }
 };
@@ -37,21 +32,18 @@ export const processTestRun = (
   testRunResponse: TestRunResponse,
   enableSoftAssert?: boolean
 ) => {
-  const errorMessage = getErrorMessage(testRunResponse);
-
-  if (errorMessage) {
-    if (enableSoftAssert) {
-      // eslint-disable-next-line no-console
-      console.error(errorMessage);
-    } else {
-      throw new Error(errorMessage);
-    }
+  const outcome = getOutcome(testRunResponse);
+  if (!outcome) {
+    return;
   }
-
-  const warningMessage = getWarningMessage(testRunResponse);
-  if (warningMessage) {
+  if (!outcome.fails) {
     // eslint-disable-next-line no-console
-    console.warn(warningMessage);
+    console.warn(outcome.message);
+  } else if (enableSoftAssert) {
+    // eslint-disable-next-line no-console
+    console.error(outcome.message);
+  } else {
+    throw new Error(outcome.message);
   }
 };
 
