@@ -19,6 +19,10 @@ describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
     testRunUnresolvedResponse.status = status;
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it(`default soft assert should throw exception if status ${status}`, () => {
     expect(() => processTestRun(testRunUnresolvedResponse)).toThrow(
       new Error(expectedMessage.concat(testRunUnresolvedResponse.url))
@@ -36,7 +40,7 @@ describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
   });
 
   it(`enabled soft assert should log error if status ${status}`, () => {
-    console.error = jest.fn();
+    jest.spyOn(console, "error").mockImplementation();
     const enableSoftAssert = true;
 
     processTestRun(testRunUnresolvedResponse, enableSoftAssert);
@@ -64,6 +68,46 @@ const okResponce: TestRunResponse = {
   ...unresolvedResponce,
   status: TestStatus.ok,
 };
+
+describe("processTestRun with a status that does not fail the test", () => {
+  beforeEach(() => {
+    jest.spyOn(console, "warn").mockImplementation();
+    jest.spyOn(console, "error").mockImplementation();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it.each([TestStatus.ok, TestStatus.approved, TestStatus.autoApproved])(
+    "passes %s without logging",
+    (status) => {
+      expect(() =>
+        processTestRun({ ...unresolvedResponce, status })
+      ).not.toThrow();
+      expect(console.warn).not.toHaveBeenCalled();
+      expect(console.error).not.toHaveBeenCalled();
+    }
+  );
+
+  it("warns about a rejected test run without throwing", () => {
+    expect(() =>
+      processTestRun({ ...unresolvedResponce, status: TestStatus.failed })
+    ).not.toThrow();
+    expect(console.warn).toHaveBeenCalledWith("Rejected: url");
+  });
+
+  it("warns about an unknown status without throwing", () => {
+    const status = "someFutureStatus" as TestStatus;
+
+    expect(() =>
+      processTestRun({ ...unresolvedResponce, status })
+    ).not.toThrow();
+    expect(console.warn).toHaveBeenCalledWith(
+      'Unknown test run status "someFutureStatus": url'
+    );
+  });
+});
 
 it("should stop when diff not found", async () => {
   // .Arrange

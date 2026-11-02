@@ -13,6 +13,26 @@ const getErrorMessage = (
   }
 };
 
+const getWarningMessage = (
+  testRunResponse: TestRunResponse
+): string | undefined => {
+  switch (testRunResponse.status) {
+    case TestStatus.new:
+    case TestStatus.ok:
+    case TestStatus.unresolved:
+    case TestStatus.approved:
+    case TestStatus.autoApproved: {
+      return undefined;
+    }
+    case TestStatus.failed: {
+      return `Rejected: ${testRunResponse.url}`;
+    }
+    default: {
+      return `Unknown test run status "${testRunResponse.status}": ${testRunResponse.url}`;
+    }
+  }
+};
+
 export const processTestRun = (
   testRunResponse: TestRunResponse,
   enableSoftAssert?: boolean
@@ -26,6 +46,12 @@ export const processTestRun = (
     } else {
       throw new Error(errorMessage);
     }
+  }
+
+  const warningMessage = getWarningMessage(testRunResponse);
+  if (warningMessage) {
+    // eslint-disable-next-line no-console
+    console.warn(warningMessage);
   }
 };
 
