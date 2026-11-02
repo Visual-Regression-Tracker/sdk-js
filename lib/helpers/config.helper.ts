@@ -110,10 +110,7 @@ const validateConfig = (config: Config): void => {
     throw new Error("project is not specified");
   }
   const timeout = config.httpTimeoutInSeconds;
-  if (
-    timeout !== undefined &&
-    !(typeof timeout === "number" && Number.isFinite(timeout) && timeout >= 0)
-  ) {
+  if (timeout !== undefined && !(Number.isFinite(timeout) && timeout >= 0)) {
     throw new Error(
       "httpTimeoutInSeconds must be a non-negative number of seconds, 0 for no limit"
     );

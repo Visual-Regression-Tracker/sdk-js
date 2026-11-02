@@ -24,13 +24,20 @@ import {
   bufferDtoToFormData,
   trackWithRetry,
   instanceOfTestRunMultipart,
-} from "./helpers";
-import {
   CONNECT_TIMEOUT_SECONDS,
   DEFAULT_HTTP_TIMEOUT_SECONDS,
   sendWithRetry,
   withConnectTimeout,
-} from "./helpers/http.helper";
+} from "./helpers";
+
+const httpAgent = withConnectTimeout(
+  new http.Agent({ keepAlive: true }),
+  CONNECT_TIMEOUT_SECONDS
+);
+const httpsAgent = withConnectTimeout(
+  new https.Agent({ keepAlive: true }),
+  CONNECT_TIMEOUT_SECONDS
+);
 
 export class ServerError extends Error {
   constructor(
@@ -114,14 +121,8 @@ export class VisualRegressionTracker {
       },
       timeout:
         (this.config.httpTimeoutInSeconds ?? DEFAULT_HTTP_TIMEOUT_SECONDS) * 1000,
-      httpAgent: withConnectTimeout(
-        new http.Agent({ keepAlive: true }),
-        CONNECT_TIMEOUT_SECONDS
-      ),
-      httpsAgent: withConnectTimeout(
-        new https.Agent({ keepAlive: true }),
-        CONNECT_TIMEOUT_SECONDS
-      ),
+      httpAgent,
+      httpsAgent,
     };
   }
 
