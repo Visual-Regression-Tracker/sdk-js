@@ -11,6 +11,10 @@ import {
   testRunNewResponse,
 } from "../__data__";
 
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
   [TestStatus.new, "No baseline: "],
   [TestStatus.unresolved, "Difference found: "],
@@ -36,7 +40,7 @@ describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
   });
 
   it(`enabled soft assert should log error if status ${status}`, () => {
-    console.error = jest.fn();
+    jest.spyOn(console, "error").mockImplementation();
     const enableSoftAssert = true;
 
     processTestRun(testRunUnresolvedResponse, enableSoftAssert);
@@ -64,6 +68,54 @@ const okResponce: TestRunResponse = {
   ...unresolvedResponce,
   status: TestStatus.ok,
 };
+
+describe("processTestRun with a status that does not fail the test", () => {
+  beforeEach(() => {
+    jest.spyOn(console, "warn").mockImplementation();
+    jest.spyOn(console, "error").mockImplementation();
+  });
+
+  it.each([TestStatus.ok, TestStatus.approved, TestStatus.autoApproved])(
+    "passes %s without logging",
+    (status) => {
+      expect(() =>
+        processTestRun({ ...testRunOkResponse, status })
+      ).not.toThrow();
+      expect(console.warn).not.toHaveBeenCalled();
+      expect(console.error).not.toHaveBeenCalled();
+    }
+  );
+
+  it("warns about a rejected test run without throwing", () => {
+    expect(() =>
+      processTestRun({ ...testRunOkResponse, status: TestStatus.failed })
+    ).not.toThrow();
+    expect(console.warn).toHaveBeenCalledWith("Rejected: url");
+  });
+
+  it("warns about a rejected test run from trackWithRetry with soft assert", async () => {
+    const trackMock = jest
+      .fn()
+      .mockResolvedValue({ ...testRunOkResponse, status: TestStatus.failed });
+
+    await trackWithRetry(trackMock, 2, true);
+
+    expect(trackMock).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith("Rejected: url");
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it("warns about an unknown status without throwing", () => {
+    const status = "someFutureStatus" as TestStatus;
+
+    expect(() =>
+      processTestRun({ ...testRunOkResponse, status })
+    ).not.toThrow();
+    expect(console.warn).toHaveBeenCalledWith(
+      'Unknown test run status "someFutureStatus": url'
+    );
+  });
+});
 
 it("should stop when diff not found", async () => {
   // .Arrange
