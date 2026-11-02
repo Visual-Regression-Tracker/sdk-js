@@ -44,6 +44,11 @@ const config: Config = {
   // Required
   branchName: "develop",
 
+  // Branch to take baselines from instead of the project's main branch
+  // (a newer baseline on branchName still wins)
+  // Optional - default is the project's main branch
+  sourceBranch: "release-1.2",
+
   // Log errors instead of throwing exceptions
   // Optional - default false
   enableSoftAssert: true,
@@ -66,6 +71,7 @@ _Is overriden if ENV variables are present_
   "apiKey": "tXZVHX0EA4YQM1MGDD",
   "ciBuildId": "commit_sha",
   "branchName": "develop",
+  "sourceBranch": "release-1.2",
   "enableSoftAssert": false
 }
 ```
@@ -80,8 +86,15 @@ VRT_PROJECT="Default project"
 VRT_APIKEY="tXZVHX0EA4YQM1MGDD"
 VRT_CIBUILDID="commit_sha"
 VRT_BRANCHNAME="develop"
+VRT_SOURCEBRANCH="release-1.2"
 VRT_ENABLESOFTASSERT=true
 ```
+
+#### `baselineBranchName` is deprecated
+
+`baselineBranchName` (`VRT_BASELINEBRANCHNAME`) was never read by the server. It still
+works as an alias of `sourceBranch` and logs a warning once; if both are set,
+`sourceBranch` wins. Rename it to `sourceBranch`.
 
 ### Setup
 
@@ -98,62 +111,55 @@ vrt.stop();
 ### Assert
 
 ```js
-await vrt.track({
-  // Name to be displayed
-  // Required
-  name: "Image name",
+const result = await vrt.track(
+  {
+    // Name to be displayed
+    // Required
+    name: "Image name",
 
-  // Base64 encoded string
-  // Required or use imagePath
-  imageBase64: image,
+    // Image, one of imageBase64, imagePath or imageBuffer is required
+    // Base64 encoded string, sent as JSON
+    imageBase64: image,
+    // Path to a PNG file, sent as multipart (service version api:4.14.0 or higher)
+    imagePath: "./screenshots/home.png",
+    // PNG as a Buffer, sent as multipart
+    imageBuffer: buffer,
 
-  // Path to image (service version api:4.14.0 or higher is required)
-  // Required or use imageBase64
-  imagePath: image,
+    // Allowed mismatch % (mismatched pixels to overal pixels count)
+    // Optional
+    diffTollerancePercent: 0,
 
-  // Allowed mismatch % (mismatched pixels to overal pixels count)
-  // Optional
-  diffTollerancePercent: 0,
+    // Optional
+    os: "Mac",
 
-  // Optional
-  os: "Mac",
+    // Optional
+    browser: "Chrome",
 
-  // Optional
-  browser: "Chrome",
+    // Optional
+    viewport: "800x600",
 
-  // Optional
-  viewport: "800x600",
+    // Optional
+    device: "PC",
 
-  // Optional
-  device: "PC",
+    // Optional
+    customTags: "Cloud, DarkTheme, Auth",
 
-  // Optional
-  customTags: "Cloud, DarkTheme, Auth",
+    // Areas to be ignored: x and y of the upper left corner, width and height, in px
+    // Optional
+    ignoreAreas: [{ x: 10, y: 20, width: 300, height: 400 }],
 
-  // Array of areas to be ignored
-  // Optional
-  ignoreAreas: [
-    {
-      // X-coordinate relative of left upper corner
-      // Required
-      x: 10;
+    // Allow additional details
+    // Optional
+    comment: "Ignoring region because of animation",
+  },
+  // How many more times to submit the image while the result is unresolved
+  // Optional - default 2
+  2
+);
 
-      // Y-coordinate relative of left upper corner
-      // Required
-      y: 20;
-
-      // Area width in px
-      // Required
-      width: 300;
-
-      // Height width in px
-      // Required
-      height: 400;
-    }
-  ]
-
-  // Allow additional details
-  // Optional
-  comment: 'Ignoring region because of animation'
-});
+// result.testRunResponse.status, result.imageUrl, result.diffUrl, result.baselineUrl
 ```
+
+Large screenshots in `imageBase64` can exceed the server's JSON body limit
+(`BODY_PARSER_JSON_LIMIT`, HTTP 413); `imagePath` and `imageBuffer` are sent as
+multipart and are not affected.

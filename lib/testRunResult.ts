@@ -7,13 +7,12 @@ export default class TestRunResult {
   baselineUrl?: string;
 
   constructor(testRunResponse: TestRunResponse, apiUrl: string) {
+    const imageUrl = (name: string) => `${apiUrl}/images/${name}`;
     this.testRunResponse = testRunResponse;
-    this.imageUrl = apiUrl.concat("/").concat(testRunResponse.imageName);
+    this.imageUrl = imageUrl(testRunResponse.imageName);
     this.diffUrl =
-      testRunResponse.diffName &&
-      apiUrl.concat("/").concat(testRunResponse.diffName);
+      testRunResponse.diffName && imageUrl(testRunResponse.diffName);
     this.baselineUrl =
-      testRunResponse.baselineName &&
-      apiUrl.concat("/").concat(testRunResponse.baselineName);
+      testRunResponse.baselineName && imageUrl(testRunResponse.baselineName);
   }
 }

@@ -15,6 +15,7 @@ import {
   instanceOfTestRunBase64,
   readConfigFromEnv,
   readConfigFromFile,
+  migrateDeprecatedConfig,
   multipartDtoToFormData,
   validateConfig,
   instanceOfTestRunBuffer,
@@ -22,6 +23,38 @@ import {
   trackWithRetry,
   instanceOfTestRunMultipart,
 } from "./helpers";
+
+const serverMessage = (data: unknown): string | undefined => {
+  if (!data || typeof data !== "object") {
+    return undefined;
+  }
+  const { message } = data as { message?: unknown };
+  if (Array.isArray(message)) {
+    return message.join(", ");
+  }
+  return typeof message === "string" ? message : JSON.stringify(data);
+};
+
+const errorHint = (status: number, retryAfter?: string): string | undefined => {
+  switch (status) {
+    case 401:
+      return "Check apiKey.";
+    case 403:
+      return "Check that the apiKey's user has access to the project.";
+    case 404:
+      return "Check apiUrl and project.";
+    case 409:
+      return "Another change to the same build or project is in progress; try again.";
+    case 413:
+      return "Track the image with imagePath or imageBuffer (multipart) instead of imageBase64, or raise BODY_PARSER_JSON_LIMIT on the server.";
+    case 422:
+      return "Track a smaller image or raise MAX_IMAGE_PIXELS on the server.";
+    case 503:
+      return retryAfter
+        ? `The server's image diff queue is full; retry after ${retryAfter} seconds.`
+        : "The server is unavailable; try again later.";
+  }
+};
 
 export class VisualRegressionTracker {
   private config: Config = {
@@ -36,7 +69,7 @@ export class VisualRegressionTracker {
 
   constructor(explicitConfig?: Config) {
     if (explicitConfig) {
-      this.config = explicitConfig;
+      this.config = migrateDeprecatedConfig(explicitConfig);
     } else {
       this.config = readConfigFromFile(this.config);
       this.config = readConfigFromEnv(this.config);
@@ -57,7 +90,6 @@ export class VisualRegressionTracker {
   async start(): Promise<BuildResponse> {
     const data = {
       branchName: this.config.branchName,
-      baselineBranchName: this.config.baselineBranchName,
       project: this.config.project,
       ciBuildId: this.config.ciBuildId,
     };
@@ -95,7 +127,7 @@ export class VisualRegressionTracker {
       buildId: this.buildId,
       projectId: this.projectId,
       branchName: this.config.branchName,
-      baselineBranchName: this.config.baselineBranchName,
+      sourceBranch: this.config.sourceBranch,
       ...test,
     };
 
@@ -126,21 +158,17 @@ export class VisualRegressionTracker {
     return response.data;
   }
 
-  private async handleException(error: AxiosError) {
+  private async handleException(error: AxiosError): Promise<never> {
+    const request = `${error.config?.method?.toUpperCase()} ${error.config?.url}`;
     if (!error.response) {
-      throw new Error("No response from server");
+      throw new Error(`No response from server for ${request}: ${error.message}`, {
+        cause: error,
+      });
     }
-    const status = error.response.status;
-    switch (status) {
-      case 401:
-        throw new Error("Unauthorized");
-      case 403:
-        throw new Error("Api key not authenticated");
-      case 404:
-        throw new Error("Project not found");
-      default:
-        throw new Error(JSON.stringify(error.response.data, null, "\t"));
-    }
+    const { status, data, statusText, headers } = error.response;
+    const hint = errorHint(status, headers["retry-after"]);
+    const message = `${request} returned ${status}: ${serverMessage(data) || statusText || error.message}`;
+    throw new Error(hint ? `${message}. ${hint}` : message);
   }
 
   private getFormData(
@@ -151,7 +179,7 @@ export class VisualRegressionTracker {
         buildId: this.buildId,
         projectId: this.projectId,
         branchName: this.config.branchName,
-        baselineBranchName: this.config.baselineBranchName,
+        sourceBranch: this.config.sourceBranch,
         ...test,
       });
     } else if (instanceOfTestRunMultipart(test)) {
@@ -159,7 +187,7 @@ export class VisualRegressionTracker {
         buildId: this.buildId,
         projectId: this.projectId,
         branchName: this.config.branchName,
-        baselineBranchName: this.config.baselineBranchName,
+        sourceBranch: this.config.sourceBranch,
         ...test,
       });
     }

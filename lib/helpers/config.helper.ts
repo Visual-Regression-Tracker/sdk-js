@@ -3,6 +3,21 @@ import { Config } from "../types";
 
 const CONFIG_FILE_PATH = "./vrt.json";
 
+let baselineBranchNameWarned = false;
+
+const sourceBranchOf = (
+  sourceBranch?: string,
+  baselineBranchName?: string
+): string | undefined => {
+  if (baselineBranchName && !baselineBranchNameWarned) {
+    baselineBranchNameWarned = true;
+    console.warn(
+      "VRT: baselineBranchName is deprecated and is sent as sourceBranch; use sourceBranch (VRT_SOURCEBRANCH) instead"
+    );
+  }
+  return sourceBranch || baselineBranchName;
+};
+
 const readConfigFromFile = (config: Config): Config => {
   if (existsSync(CONFIG_FILE_PATH)) {
     const fileConfig = JSON.parse(readFileSync(CONFIG_FILE_PATH).toString());
@@ -12,8 +27,12 @@ const readConfigFromFile = (config: Config): Config => {
     if (fileConfig.branchName) {
       config.branchName = fileConfig.branchName;
     }
-    if (fileConfig.baselineBranchName) {
-      config.baselineBranchName = fileConfig.baselineBranchName;
+    const sourceBranch = sourceBranchOf(
+      fileConfig.sourceBranch,
+      fileConfig.baselineBranchName
+    );
+    if (sourceBranch) {
+      config.sourceBranch = sourceBranch;
     }
     if (fileConfig.project) {
       config.project = fileConfig.project;
@@ -38,8 +57,12 @@ const readConfigFromEnv = (config: Config): Config => {
   if (process.env["VRT_BRANCHNAME"]) {
     config.branchName = process.env["VRT_BRANCHNAME"];
   }
-  if (process.env["VRT_BASELINEBRANCHNAME"]) {
-    config.baselineBranchName = process.env["VRT_BASELINEBRANCHNAME"];
+  const sourceBranch = sourceBranchOf(
+    process.env["VRT_SOURCEBRANCH"],
+    process.env["VRT_BASELINEBRANCHNAME"]
+  );
+  if (sourceBranch) {
+    config.sourceBranch = sourceBranch;
   }
   if (process.env["VRT_PROJECT"]) {
     config.project = process.env["VRT_PROJECT"];
@@ -54,6 +77,17 @@ const readConfigFromEnv = (config: Config): Config => {
     config.enableSoftAssert = process.env["VRT_ENABLESOFTASSERT"] === "true";
   }
   return config;
+};
+
+const migrateDeprecatedConfig = (config: Config): Config => {
+  if (!config.baselineBranchName) {
+    return config;
+  }
+  const { baselineBranchName, ...rest } = config;
+  return {
+    ...rest,
+    sourceBranch: sourceBranchOf(rest.sourceBranch, baselineBranchName),
+  };
 };
 
 const validateConfig = (config: Config): void => {
@@ -71,4 +105,9 @@ const validateConfig = (config: Config): void => {
   }
 };
 
-export { readConfigFromFile, readConfigFromEnv, validateConfig };
+export {
+  readConfigFromFile,
+  readConfigFromEnv,
+  migrateDeprecatedConfig,
+  validateConfig,
+};

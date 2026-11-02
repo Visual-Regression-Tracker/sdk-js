@@ -15,7 +15,7 @@ export interface TestRunDto {
 
   branchName: string;
 
-  baselineBranchName?: string
+  sourceBranch?: string;
 
   buildId: string;
 
