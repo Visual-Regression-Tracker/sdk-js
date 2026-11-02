@@ -186,11 +186,8 @@ export class VisualRegressionTracker {
     const fromServer = serverMessage(data);
     const detail = fromServer || statusText || error.message;
     const hint = errorHint(status, url, headers["retry-after"], !!fromServer);
-    throw new Error(
-      `${request} returned ${status}: ${
-        hint ? `${detail.replace(/\.$/, "")}. ${hint}` : detail
-      }`
-    );
+    const text = hint ? `${detail.replace(/\.$/, "")}. ${hint}` : detail;
+    throw new Error(`${request} returned ${status}: ${text}`);
   }
 
   private getFormData(
