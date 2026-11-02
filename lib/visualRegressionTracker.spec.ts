@@ -1,6 +1,12 @@
-import axios, { AxiosError, AxiosHeaders, AxiosResponse } from "axios";
+import axios, {
+  AxiosError,
+  AxiosHeaders,
+  AxiosRequestHeaders,
+  AxiosResponse,
+} from "axios";
 import { mocked } from "jest-mock";
 import FormData from "form-data";
+import { inspect } from "util";
 import { testRunOkResponse, testRunUnresolvedResponse } from "./__data__";
 import { VisualRegressionTracker } from "./visualRegressionTracker";
 import {
@@ -22,7 +28,12 @@ const mockedAxios = mocked(axios);
 jest.mock("./testRunResult");
 const mockedTestRunResult = mocked(TestRunResult);
 
-jest.mock("./helpers/config.helper");
+jest.mock("./helpers/config.helper", () => ({
+  ...jest.requireActual("./helpers/config.helper"),
+  readConfigFromFile: jest.fn(),
+  readConfigFromEnv: jest.fn(),
+  validateConfig: jest.fn(),
+}));
 const mockedConfigHelper = mocked(configHelper);
 
 jest.mock("./helpers/dto.helper");
@@ -32,76 +43,40 @@ const headers = AxiosHeaders.from({
   'Content-Type': 'application/json'
 });
 
-const axiosError404: AxiosError = {
+const axiosError = (
+  status: number,
+  data: unknown,
+  responseHeaders: Record<string, string> = {},
+  statusText = "",
+  url = "http://localhost:4200/test-runs"
+): AxiosError => ({
   isAxiosError: true,
   toJSON: jest.fn(),
-  name: "",
-  message: "",
+  name: "AxiosError",
+  message: `Request failed with status code ${status}`,
+  config: { headers, method: "post", url },
   response: {
-    status: 404,
-    data: {},
-    statusText: "Not found",
-    headers: {},
-    config: {headers},
+    status,
+    data,
+    statusText,
+    headers: responseHeaders,
+    config: { headers },
   },
-};
+});
 
-const axiosError403: AxiosError = {
-  isAxiosError: true,
-  toJSON: jest.fn(),
-  name: "",
-  message: "",
-  response: {
-    status: 403,
-    data: {},
-    statusText: "Not found",
-    headers: {},
-    config: {headers},
-  },
-};
+const errorBody = (statusCode: number, message: string | string[]) => ({
+  statusCode,
+  path: "/test-runs",
+  name: "HttpException",
+  message,
+});
 
-const axiosError401: AxiosError = {
-  isAxiosError: true,
-  toJSON: jest.fn(),
-  name: "",
-  message: "",
-  response: {
-    status: 401,
-    data: {},
-    statusText: "Unauthorized",
-    headers: {},
-    config: {headers},
-  },
-};
-
-const axiosErrorUnknown: AxiosError = {
-  isAxiosError: true,
-  toJSON: jest.fn(),
-  name: "asdas",
-  message: "Unknown error",
-  response: {
-    status: 500,
-    data: {
-      some: "data",
-    },
-    statusText: "Internal exception",
-    headers: {},
-    config: {headers},
-  },
-};
-
-const axiosErrorEmptyResponse: AxiosError = {
-  isAxiosError: true,
-  toJSON: jest.fn(),
-  name: "asdas",
-  message: "Unknown error",
-  response: undefined,
-};
+const axiosError401 = axiosError(401, errorBody(401, "Unauthorized"));
 
 const config: Config = {
   apiUrl: "http://localhost:4200",
   branchName: "develop",
-  baselineBranchName: "next-release",
+  sourceBranch: "next-release",
   project: "Default project",
   apiKey: "CPKVK4JNK24NVNPNGVFQ853HXXEG",
   enableSoftAssert: false,
@@ -177,7 +152,7 @@ describe("VisualRegressionTracker", () => {
     const fileConfig: Config = {
       apiUrl: "apiUrlFile",
       branchName: "branchNameFile",
-      baselineBranchName: "baselineBranchNameFile",
+      sourceBranch: "sourceBranchFile",
       project: "projectFile",
       apiKey: "apiKeyFile",
       enableSoftAssert: false,
@@ -186,7 +161,7 @@ describe("VisualRegressionTracker", () => {
     const envConfig: Config = {
       apiUrl: "apiUrlEnv",
       branchName: "branchNameEnv",
-      baselineBranchName: "baselineBranchNameEnv",
+      sourceBranch: "sourceBranchEnv",
       project: "projectEnv",
       apiKey: "apiKeyEnv",
       enableSoftAssert: false,
@@ -208,6 +183,21 @@ describe("VisualRegressionTracker", () => {
       new VisualRegressionTracker();
 
       expect(mockedConfigHelper.validateConfig).toHaveBeenCalledWith(envConfig);
+    });
+
+    it("should use deprecated baselineBranchName as sourceBranch", () => {
+      jest.spyOn(console, "warn").mockImplementation(() => {});
+      const { sourceBranch, ...legacyConfig } = config;
+
+      new VisualRegressionTracker({
+        ...legacyConfig,
+        baselineBranchName: "legacy",
+      });
+
+      expect(mockedConfigHelper.validateConfig).toHaveBeenLastCalledWith({
+        ...legacyConfig,
+        sourceBranch: "legacy",
+      });
     });
   });
 
@@ -285,7 +275,7 @@ describe("VisualRegressionTracker", () => {
         buildId,
         projectId,
         branchName: config.branchName,
-        baselineBranchName: config.baselineBranchName,
+        sourceBranch: config.sourceBranch,
         ...testRunMultipart,
       });
       expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledTimes(1);
@@ -314,7 +304,7 @@ describe("VisualRegressionTracker", () => {
         buildId,
         projectId,
         branchName: config.branchName,
-        baselineBranchName: config.baselineBranchName,
+        sourceBranch: config.sourceBranch,
         ...testRunMultipart,
       });
       expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledTimes(4);
@@ -338,7 +328,7 @@ describe("VisualRegressionTracker", () => {
         buildId,
         projectId,
         branchName: config.branchName,
-        baselineBranchName: config.baselineBranchName,
+        sourceBranch: config.sourceBranch,
         ...testRunBuffer,
       });
       expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledWith(data);
@@ -365,7 +355,6 @@ describe("VisualRegressionTracker", () => {
         `${config.apiUrl}/builds`,
         {
           branchName: config.branchName,
-          baselineBranchName: config.baselineBranchName,
           project: config.project,
           ciBuildId: config.ciBuildId,
         },
@@ -379,6 +368,25 @@ describe("VisualRegressionTracker", () => {
       expect(vrt["buildId"]).toBe(buildId);
       expect(vrt["projectId"]).toBe(projectId);
       expect(result).toBe(build);
+    });
+
+    it("should not send deprecated baselineBranchName", async () => {
+      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vrt = new VisualRegressionTracker({
+        ...config,
+        baselineBranchName: "legacy",
+      });
+      mockedAxios.post.mockResolvedValueOnce({
+        data: { id: "1312", projectId: "asd" },
+      });
+
+      await vrt.start();
+
+      expect(mockedAxios.post.mock.calls[0][1]).toStrictEqual({
+        branchName: config.branchName,
+        project: config.project,
+        ciBuildId: config.ciBuildId,
+      });
     });
 
     it("should handle exception", async () => {
@@ -484,7 +492,7 @@ describe("VisualRegressionTracker", () => {
           buildId: buildId,
           projectId: projectId,
           branchName: config.branchName,
-          baselineBranchName: config.baselineBranchName,
+          sourceBranch: config.sourceBranch,
           name: testRunBase64.name,
           imageBase64: testRunBase64.imageBase64,
           os: testRunBase64.os,
@@ -572,24 +580,179 @@ describe("VisualRegressionTracker", () => {
     expect(result).toBe(build);
   });
 
-  describe.each<[number | undefined, AxiosError, string]>([
-    [axiosError401.response?.status, axiosError401, "Unauthorized"],
-    [
-      axiosError403.response?.status,
-      axiosError403,
-      "Api key not authenticated",
-    ],
-    [axiosError404.response?.status, axiosError404, "Project not found"],
-    [
-      axiosErrorUnknown.response?.status,
-      axiosErrorUnknown,
-      JSON.stringify(axiosErrorUnknown),
-    ],
-    [undefined, axiosErrorEmptyResponse, "No response from server"],
-  ])("handleException", (code, error, expectedMessage) => {
-    it(`Error ${code}`, async () => {
+  describe("handleException", () => {
+    const request = "POST http://localhost:4200/test-runs";
+
+    it.each<[string, AxiosError, string]>([
+      [
+        "401 asks to check apiKey",
+        axiosError401,
+        `${request} returned 401: Unauthorized. Check apiKey.`,
+      ],
+      [
+        "403 asks to check project access",
+        axiosError(403, errorBody(403, "Forbidden resource")),
+        `${request} returned 403: Forbidden resource. Check that the apiKey's user has access to the project.`,
+      ],
+      [
+        "404 names the request and the server's reason",
+        axiosError(404, errorBody(404, "Build 1312 not found")),
+        `${request} returned 404: Build 1312 not found`,
+      ],
+      [
+        "404 without a server body asks to check apiUrl",
+        axiosError(404, "<html>404</html>", {}, "Not Found"),
+        `${request} returned 404: Not Found. Check apiUrl and project.`,
+      ],
+      [
+        "404 for a missing route asks to check apiUrl",
+        axiosError(404, errorBody(404, "Cannot POST /test-runs")),
+        `${request} returned 404: Cannot POST /test-runs. Check apiUrl and project.`,
+      ],
+      [
+        "credentials in apiUrl are not shown",
+        axiosError(
+          401,
+          errorBody(401, "Unauthorized"),
+          {},
+          "",
+          "https://ci:s3cret@vrt.example.com/api/test-runs"
+        ),
+        `POST https://vrt.example.com/api/test-runs returned 401: Unauthorized. Check apiKey.`,
+      ],
+      [
+        "server message ending with a period is not doubled",
+        axiosError(409, errorBody(409, "Nothing to revert.")),
+        `${request} returned 409: Nothing to revert. Another change to the same build or project is in progress; try again.`,
+      ],
+      [
+        "409 asks to try again",
+        axiosError(
+          409,
+          errorBody(409, "Build 1312 keeps receiving test runs, try again later")
+        ),
+        `${request} returned 409: Build 1312 keeps receiving test runs, try again later. Another change to the same build or project is in progress; try again.`,
+      ],
+      [
+        "413 suggests multipart or BODY_PARSER_JSON_LIMIT",
+        axiosError(413, "<html>413</html>", {}, "Payload Too Large"),
+        `${request} returned 413: Payload Too Large. Track the image with imagePath or imageBuffer (multipart) instead of imageBase64, or raise BODY_PARSER_JSON_LIMIT on the server.`,
+      ],
+      [
+        "413 on builds only mentions BODY_PARSER_JSON_LIMIT",
+        axiosError(
+          413,
+          "",
+          {},
+          "Payload Too Large",
+          "http://localhost:4200/builds"
+        ),
+        `POST http://localhost:4200/builds returned 413: Payload Too Large. Raise BODY_PARSER_JSON_LIMIT on the server.`,
+      ],
+      [
+        "413 on multipart mentions MULTIPART_FILE_SIZE_LIMIT",
+        axiosError(
+          413,
+          errorBody(413, "File too large"),
+          {},
+          "",
+          "http://localhost:4200/test-runs/multipart"
+        ),
+        `POST http://localhost:4200/test-runs/multipart returned 413: File too large. Raise MULTIPART_FILE_SIZE_LIMIT (or the proxy's body size limit) on the server.`,
+      ],
+      [
+        "422 mentions MAX_IMAGE_PIXELS",
+        axiosError(
+          422,
+          errorBody(
+            422,
+            "Image is 20000x20000 (400000000 pixels), above MAX_IMAGE_PIXELS=100000000"
+          )
+        ),
+        `${request} returned 422: Image is 20000x20000 (400000000 pixels), above MAX_IMAGE_PIXELS=100000000. Track a smaller image or raise MAX_IMAGE_PIXELS on the server.`,
+      ],
+      [
+        "503 with Retry-After says when to retry",
+        axiosError(
+          503,
+          errorBody(503, "Image diff queue is full (100 jobs)"),
+          { "retry-after": "5" }
+        ),
+        `${request} returned 503: Image diff queue is full (100 jobs). The server is busy or restarting; try again after Retry-After: 5.`,
+      ],
+      [
+        "503 without Retry-After asks to try later",
+        axiosError(503, "", {}, "Service Unavailable"),
+        `${request} returned 503: Service Unavailable. The server is unavailable; try again later.`,
+      ],
+      [
+        "400 joins validation messages",
+        axiosError(
+          400,
+          errorBody(400, ["name should not be empty", "buildId must be a UUID"])
+        ),
+        `${request} returned 400: name should not be empty, buildId must be a UUID`,
+      ],
+      [
+        "500 without a message shows the body",
+        axiosError(500, { some: "data" }),
+        `${request} returned 500: {"some":"data"}`,
+      ],
+      [
+        "unknown body falls back to the axios message",
+        axiosError(502, ""),
+        `${request} returned 502: Request failed with status code 502`,
+      ],
+    ])("%s", async (_, error, expectedMessage) => {
       await expect(vrt["handleException"](error)).rejects.toThrow(
-        expectedMessage
+        new Error(expectedMessage)
+      );
+    });
+
+    describe("network error", () => {
+      const cause = Object.assign(
+        new Error("connect ECONNREFUSED 127.0.0.1:4200"),
+        { code: "ECONNREFUSED" }
+      );
+      const error: AxiosError = {
+        isAxiosError: true,
+        toJSON: jest.fn(),
+        name: "AxiosError",
+        message: "connect ECONNREFUSED 127.0.0.1:4200",
+        code: "ECONNREFUSED",
+        cause,
+        config: {
+          headers: { apiKey: config.apiKey } as unknown as AxiosRequestHeaders,
+          method: "post",
+          url: "http://localhost:4200/builds",
+        },
+      };
+
+      it("names the request and the error code", async () => {
+        const thrown = await vrt["handleException"](error).catch((e) => e);
+
+        expect(thrown.message).toBe(
+          "No response from server for POST http://localhost:4200/builds (ECONNREFUSED): connect ECONNREFUSED 127.0.0.1:4200"
+        );
+        expect(thrown.cause).toBe(cause);
+      });
+
+      it("does not expose the apiKey", async () => {
+        const thrown = await vrt["handleException"](error).catch((e) => e);
+
+        expect(inspect(thrown, { depth: Infinity })).not.toContain(
+          config.apiKey
+        );
+      });
+    });
+
+    it("names an unknown request when the error has no config", async () => {
+      const thrown = await vrt["handleException"](
+        new Error("boom") as AxiosError
+      ).catch((e) => e);
+
+      expect(thrown.message).toBe(
+        "No response from server for VRT request: boom"
       );
     });
   });

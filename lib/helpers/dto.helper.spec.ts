@@ -101,3 +101,53 @@ describe("bufferDtoToFormData", () => {
     expect(appendSpy.mock.calls).toMatchSnapshot();
   });
 });
+
+describe("sourceBranch", () => {
+  const dto = {
+    branchName: "develop",
+    sourceBranch: "feature",
+    projectId: "projectId",
+    buildId: "buildId",
+    name: "name",
+  };
+
+  it.each([
+    [
+      "multipartDtoToFormData",
+      () => multipartDtoToFormData({ ...dto, imagePath: "./lib/__data__/2.png" }),
+    ],
+    [
+      "bufferDtoToFormData",
+      () => bufferDtoToFormData({ ...dto, imageBuffer: Buffer.of(1, 2, 3) }),
+    ],
+  ])("should be sent by %s", (_, toFormData) => {
+    fsMock.createReadStream.mockReturnValueOnce(
+      "mocked Image" as unknown as fs.ReadStream
+    );
+    fsMock.statSync.mockReturnValueOnce({ size: 1234 } as fs.Stats);
+
+    toFormData();
+
+    expect(appendSpy).toHaveBeenCalledWith("sourceBranch", "feature");
+  });
+});
+
+describe("deprecated baselineBranchName", () => {
+  it("is accepted by the DTO type but not sent", () => {
+    const dto: TestRunBufferDto = {
+      branchName: "develop",
+      baselineBranchName: "release",
+      projectId: "projectId",
+      buildId: "buildId",
+      name: "name",
+      imageBuffer: Buffer.of(1, 2, 3),
+    };
+
+    bufferDtoToFormData(dto);
+
+    expect(appendSpy).not.toHaveBeenCalledWith(
+      "baselineBranchName",
+      expect.anything()
+    );
+  });
+});

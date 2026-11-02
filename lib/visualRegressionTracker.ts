@@ -15,6 +15,7 @@ import {
   instanceOfTestRunBase64,
   readConfigFromEnv,
   readConfigFromFile,
+  migrateDeprecatedConfig,
   multipartDtoToFormData,
   validateConfig,
   instanceOfTestRunBuffer,
@@ -22,6 +23,51 @@ import {
   trackWithRetry,
   instanceOfTestRunMultipart,
 } from "./helpers";
+
+const serverMessage = (data: unknown): string | undefined => {
+  if (!data || typeof data !== "object") {
+    return undefined;
+  }
+  const { message } = data as { message?: unknown };
+  if (Array.isArray(message)) {
+    return message.join(", ");
+  }
+  return typeof message === "string" ? message : JSON.stringify(data);
+};
+
+const errorHint = (
+  status: number,
+  url: string,
+  retryAfter: string | undefined,
+  serverReason: string | undefined
+): string | undefined => {
+  switch (status) {
+    case 401:
+      return "Check apiKey.";
+    case 403:
+      return "Check that the apiKey's user has access to the project.";
+    case 404:
+      return serverReason && !/^Cannot [A-Z]+ \//.test(serverReason)
+        ? undefined
+        : "Check apiUrl and project.";
+    case 409:
+      return "Another change to the same build or project is in progress; try again.";
+    case 413:
+      if (url.endsWith("/test-runs/multipart")) {
+        return "Raise MULTIPART_FILE_SIZE_LIMIT (or the proxy's body size limit) on the server.";
+      }
+      if (url.endsWith("/test-runs")) {
+        return "Track the image with imagePath or imageBuffer (multipart) instead of imageBase64, or raise BODY_PARSER_JSON_LIMIT on the server.";
+      }
+      return "Raise BODY_PARSER_JSON_LIMIT on the server.";
+    case 422:
+      return "Track a smaller image or raise MAX_IMAGE_PIXELS on the server.";
+    case 503:
+      return retryAfter
+        ? `The server is busy or restarting; try again after Retry-After: ${retryAfter}.`
+        : "The server is unavailable; try again later.";
+  }
+};
 
 export class VisualRegressionTracker {
   private config: Config = {
@@ -36,7 +82,7 @@ export class VisualRegressionTracker {
 
   constructor(explicitConfig?: Config) {
     if (explicitConfig) {
-      this.config = explicitConfig;
+      this.config = migrateDeprecatedConfig(explicitConfig);
     } else {
       this.config = readConfigFromFile(this.config);
       this.config = readConfigFromEnv(this.config);
@@ -57,7 +103,6 @@ export class VisualRegressionTracker {
   async start(): Promise<BuildResponse> {
     const data = {
       branchName: this.config.branchName,
-      baselineBranchName: this.config.baselineBranchName,
       project: this.config.project,
       ciBuildId: this.config.ciBuildId,
     };
@@ -95,7 +140,7 @@ export class VisualRegressionTracker {
       buildId: this.buildId,
       projectId: this.projectId,
       branchName: this.config.branchName,
-      baselineBranchName: this.config.baselineBranchName,
+      sourceBranch: this.config.sourceBranch,
       ...test,
     };
 
@@ -126,21 +171,25 @@ export class VisualRegressionTracker {
     return response.data;
   }
 
-  private async handleException(error: AxiosError) {
+  private async handleException(error: AxiosError): Promise<never> {
+    const url = (error.config?.url ?? "").replace(/\/\/[^/@]*@/, "//");
+    const request = error.config
+      ? `${error.config.method?.toUpperCase()} ${url}`
+      : "VRT request";
     if (!error.response) {
-      throw new Error("No response from server");
+      const code = error.code ? ` (${error.code})` : "";
+      // not the AxiosError itself: its config holds the apiKey header
+      throw new Error(
+        `No response from server for ${request}${code}: ${error.message}`,
+        { cause: error.cause }
+      );
     }
-    const status = error.response.status;
-    switch (status) {
-      case 401:
-        throw new Error("Unauthorized");
-      case 403:
-        throw new Error("Api key not authenticated");
-      case 404:
-        throw new Error("Project not found");
-      default:
-        throw new Error(JSON.stringify(error.response.data, null, "\t"));
-    }
+    const { status, data, statusText, headers } = error.response;
+    const fromServer = serverMessage(data);
+    const detail = fromServer || statusText || error.message;
+    const hint = errorHint(status, url, headers["retry-after"], fromServer);
+    const text = hint ? `${detail.replace(/\.$/, "")}. ${hint}` : detail;
+    throw new Error(`${request} returned ${status}: ${text}`);
   }
 
   private getFormData(
@@ -151,7 +200,7 @@ export class VisualRegressionTracker {
         buildId: this.buildId,
         projectId: this.projectId,
         branchName: this.config.branchName,
-        baselineBranchName: this.config.baselineBranchName,
+        sourceBranch: this.config.sourceBranch,
         ...test,
       });
     } else if (instanceOfTestRunMultipart(test)) {
@@ -159,7 +208,7 @@ export class VisualRegressionTracker {
         buildId: this.buildId,
         projectId: this.projectId,
         branchName: this.config.branchName,
-        baselineBranchName: this.config.baselineBranchName,
+        sourceBranch: this.config.sourceBranch,
         ...test,
       });
     }

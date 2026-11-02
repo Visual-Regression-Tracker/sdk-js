@@ -15,7 +15,10 @@ export interface TestRunDto {
 
   branchName: string;
 
-  baselineBranchName?: string
+  sourceBranch?: string;
+
+  /** @deprecated not sent; use sourceBranch */
+  baselineBranchName?: string;
 
   buildId: string;
 

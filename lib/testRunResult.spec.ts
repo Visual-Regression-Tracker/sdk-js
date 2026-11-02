@@ -17,7 +17,7 @@ describe("TestRunResult", () => {
     const result = new TestRunResult(testRunResponse, "http://localhost");
 
     expect(result.testRunResponse).toBe(testRunResponse);
-    expect(result.imageUrl).toBe("http://localhost/imageName");
+    expect(result.imageUrl).toBe("http://localhost/images/imageName");
     expect(result.diffUrl).toBeUndefined();
     expect(result.baselineUrl).toBeUndefined();
   });
@@ -39,8 +39,8 @@ describe("TestRunResult", () => {
     const result = new TestRunResult(testRunResponse, "http://localhost");
 
     expect(result.testRunResponse).toBe(testRunResponse);
-    expect(result.imageUrl).toBe("http://localhost/imageName");
-    expect(result.diffUrl).toBe("http://localhost/diffName");
-    expect(result.baselineUrl).toBe("http://localhost/baselineName");
+    expect(result.imageUrl).toBe("http://localhost/images/imageName");
+    expect(result.diffUrl).toBe("http://localhost/images/diffName");
+    expect(result.baselineUrl).toBe("http://localhost/images/baselineName");
   });
 });
