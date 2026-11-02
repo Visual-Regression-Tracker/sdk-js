@@ -93,6 +93,18 @@ describe("processTestRun with a status that does not fail the test", () => {
     expect(console.warn).toHaveBeenCalledWith("Rejected: url");
   });
 
+  it("warns about a rejected test run from trackWithRetry with soft assert", async () => {
+    const trackMock = jest
+      .fn()
+      .mockResolvedValue({ ...testRunOkResponse, status: TestStatus.failed });
+
+    await trackWithRetry(trackMock, 2, true);
+
+    expect(trackMock).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith("Rejected: url");
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
   it("warns about an unknown status without throwing", () => {
     const status = "someFutureStatus" as TestStatus;
 
