@@ -35,7 +35,11 @@ const serverMessage = (data: unknown): string | undefined => {
   return typeof message === "string" ? message : JSON.stringify(data);
 };
 
-const errorHint = (status: number, retryAfter?: string): string | undefined => {
+const errorHint = (
+  status: number,
+  retryAfter: string | undefined,
+  multipart: boolean
+): string | undefined => {
   switch (status) {
     case 401:
       return "Check apiKey.";
@@ -46,12 +50,14 @@ const errorHint = (status: number, retryAfter?: string): string | undefined => {
     case 409:
       return "Another change to the same build or project is in progress; try again.";
     case 413:
-      return "Track the image with imagePath or imageBuffer (multipart) instead of imageBase64, or raise BODY_PARSER_JSON_LIMIT on the server.";
+      return multipart
+        ? "Raise MULTIPART_FILE_SIZE_LIMIT (or the proxy's body size limit) on the server."
+        : "Track the image with imagePath or imageBuffer (multipart) instead of imageBase64, or raise BODY_PARSER_JSON_LIMIT on the server.";
     case 422:
       return "Track a smaller image or raise MAX_IMAGE_PIXELS on the server.";
     case 503:
       return retryAfter
-        ? `The server's image diff queue is full; retry after ${retryAfter} seconds.`
+        ? `The server is busy or restarting; try again after Retry-After: ${retryAfter}.`
         : "The server is unavailable; try again later.";
   }
 };
@@ -159,14 +165,17 @@ export class VisualRegressionTracker {
   }
 
   private async handleException(error: AxiosError): Promise<never> {
-    const request = `${error.config?.method?.toUpperCase()} ${error.config?.url}`;
+    const request = error.config
+      ? `${error.config.method?.toUpperCase()} ${error.config.url}`
+      : "VRT request";
     if (!error.response) {
       throw new Error(`No response from server for ${request}: ${error.message}`, {
         cause: error,
       });
     }
     const { status, data, statusText, headers } = error.response;
-    const hint = errorHint(status, headers["retry-after"]);
+    const multipart = !!error.config?.url?.endsWith("/test-runs/multipart");
+    const hint = errorHint(status, headers["retry-after"], multipart);
     const message = `${request} returned ${status}: ${serverMessage(data) || statusText || error.message}`;
     throw new Error(hint ? `${message}. ${hint}` : message);
   }

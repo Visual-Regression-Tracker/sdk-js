@@ -12,7 +12,7 @@ const sourceBranchOf = (
   if (baselineBranchName && !baselineBranchNameWarned) {
     baselineBranchNameWarned = true;
     console.warn(
-      "VRT: baselineBranchName is deprecated and is sent as sourceBranch; use sourceBranch (VRT_SOURCEBRANCH) instead"
+      "VRT: baselineBranchName (VRT_BASELINEBRANCHNAME) is deprecated, use sourceBranch (VRT_SOURCEBRANCH)"
     );
   }
   return sourceBranch || baselineBranchName;

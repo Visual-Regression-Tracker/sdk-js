@@ -21,6 +21,10 @@ const initialConfig: Config = {
 };
 
 describe("config.helper", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe("readConfigFromFile", () => {
     beforeEach(() => {
       mockedFs.readFileSync.mockClear();
@@ -200,7 +204,7 @@ describe("config.helper", () => {
 
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("baselineBranchName is deprecated")
+        "VRT: baselineBranchName (VRT_BASELINEBRANCHNAME) is deprecated, use sourceBranch (VRT_SOURCEBRANCH)"
       );
     });
   });

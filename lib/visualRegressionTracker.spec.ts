@@ -41,13 +41,14 @@ const axiosError = (
   status: number,
   data: unknown,
   responseHeaders: Record<string, string> = {},
-  statusText = ""
+  statusText = "",
+  url = "http://localhost:4200/test-runs"
 ): AxiosError => ({
   isAxiosError: true,
   toJSON: jest.fn(),
   name: "AxiosError",
   message: `Request failed with status code ${status}`,
-  config: { headers, method: "post", url: "http://localhost:4200/test-runs" },
+  config: { headers, method: "post", url },
   response: {
     status,
     data,
@@ -606,6 +607,17 @@ describe("VisualRegressionTracker", () => {
         `${request} returned 413: Payload Too Large. Track the image with imagePath or imageBuffer (multipart) instead of imageBase64, or raise BODY_PARSER_JSON_LIMIT on the server.`,
       ],
       [
+        "413 on multipart mentions MULTIPART_FILE_SIZE_LIMIT",
+        axiosError(
+          413,
+          errorBody(413, "File too large"),
+          {},
+          "",
+          "http://localhost:4200/test-runs/multipart"
+        ),
+        `POST http://localhost:4200/test-runs/multipart returned 413: File too large. Raise MULTIPART_FILE_SIZE_LIMIT (or the proxy's body size limit) on the server.`,
+      ],
+      [
         "422 mentions MAX_IMAGE_PIXELS",
         axiosError(
           422,
@@ -623,7 +635,7 @@ describe("VisualRegressionTracker", () => {
           errorBody(503, "Image diff queue is full (100 jobs)"),
           { "retry-after": "5" }
         ),
-        `${request} returned 503: Image diff queue is full (100 jobs). The server's image diff queue is full; retry after 5 seconds.`,
+        `${request} returned 503: Image diff queue is full (100 jobs). The server is busy or restarting; try again after Retry-After: 5.`,
       ],
       [
         "503 without Retry-After asks to try later",
@@ -669,6 +681,16 @@ describe("VisualRegressionTracker", () => {
         "No response from server for POST http://localhost:4200/builds: connect ECONNREFUSED 127.0.0.1:4200"
       );
       expect(thrown.cause).toBe(error);
+    });
+
+    it("names an unknown request when the error has no config", async () => {
+      const thrown = await vrt["handleException"](
+        new Error("boom") as AxiosError
+      ).catch((e) => e);
+
+      expect(thrown.message).toBe(
+        "No response from server for VRT request: boom"
+      );
     });
   });
 });
