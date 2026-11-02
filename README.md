@@ -93,8 +93,10 @@ VRT_ENABLESOFTASSERT=true
 #### `baselineBranchName` is deprecated
 
 `baselineBranchName` (`VRT_BASELINEBRANCHNAME`) was never read by the server. It still
-works as an alias of `sourceBranch` and logs a warning once; if both are set,
-`sourceBranch` wins. Rename it to `sourceBranch`.
+works as an alias of `sourceBranch` and logs a warning once. Within one source
+(explicit config, `vrt.json` or environment) `sourceBranch` wins over the alias;
+across sources the usual order applies, so `VRT_BASELINEBRANCHNAME` overrides
+`sourceBranch` from `vrt.json`. Rename it to `sourceBranch`.
 
 ### Setup
 
@@ -159,6 +161,9 @@ const result = await vrt.track(
 
 // result.testRunResponse.status, result.imageUrl, result.diffUrl, result.baselineUrl
 ```
+
+`imageUrl`, `diffUrl` and `baselineUrl` point to `{apiUrl}/images/{name}`, which
+needs VRT API 5.0.8 or later.
 
 Large screenshots in `imageBase64` can exceed the server's JSON body limit
 (`BODY_PARSER_JSON_LIMIT`, HTTP 413); `imagePath` and `imageBuffer` are sent as

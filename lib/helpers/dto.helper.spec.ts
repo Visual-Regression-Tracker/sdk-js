@@ -131,3 +131,23 @@ describe("sourceBranch", () => {
     expect(appendSpy).toHaveBeenCalledWith("sourceBranch", "feature");
   });
 });
+
+describe("deprecated baselineBranchName", () => {
+  it("is accepted by the DTO type but not sent", () => {
+    const dto: TestRunBufferDto = {
+      branchName: "develop",
+      baselineBranchName: "release",
+      projectId: "projectId",
+      buildId: "buildId",
+      name: "name",
+      imageBuffer: Buffer.of(1, 2, 3),
+    };
+
+    bufferDtoToFormData(dto);
+
+    expect(appendSpy).not.toHaveBeenCalledWith(
+      "baselineBranchName",
+      expect.anything()
+    );
+  });
+});

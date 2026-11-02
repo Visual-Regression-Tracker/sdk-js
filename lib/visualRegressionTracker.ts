@@ -37,8 +37,9 @@ const serverMessage = (data: unknown): string | undefined => {
 
 const errorHint = (
   status: number,
+  url: string,
   retryAfter: string | undefined,
-  multipart: boolean
+  hasServerMessage: boolean
 ): string | undefined => {
   switch (status) {
     case 401:
@@ -46,13 +47,17 @@ const errorHint = (
     case 403:
       return "Check that the apiKey's user has access to the project.";
     case 404:
-      return "Check apiUrl and project.";
+      return hasServerMessage ? undefined : "Check apiUrl and project.";
     case 409:
       return "Another change to the same build or project is in progress; try again.";
     case 413:
-      return multipart
-        ? "Raise MULTIPART_FILE_SIZE_LIMIT (or the proxy's body size limit) on the server."
-        : "Track the image with imagePath or imageBuffer (multipart) instead of imageBase64, or raise BODY_PARSER_JSON_LIMIT on the server.";
+      if (url.endsWith("/test-runs/multipart")) {
+        return "Raise MULTIPART_FILE_SIZE_LIMIT (or the proxy's body size limit) on the server.";
+      }
+      if (url.endsWith("/test-runs")) {
+        return "Track the image with imagePath or imageBuffer (multipart) instead of imageBase64, or raise BODY_PARSER_JSON_LIMIT on the server.";
+      }
+      return "Raise BODY_PARSER_JSON_LIMIT on the server.";
     case 422:
       return "Track a smaller image or raise MAX_IMAGE_PIXELS on the server.";
     case 503:
@@ -165,19 +170,27 @@ export class VisualRegressionTracker {
   }
 
   private async handleException(error: AxiosError): Promise<never> {
+    const url = error.config?.url ?? "";
     const request = error.config
-      ? `${error.config.method?.toUpperCase()} ${error.config.url}`
+      ? `${error.config.method?.toUpperCase()} ${url}`
       : "VRT request";
     if (!error.response) {
-      throw new Error(`No response from server for ${request}: ${error.message}`, {
-        cause: error,
-      });
+      const code = error.code ? ` (${error.code})` : "";
+      // not the AxiosError itself: its config holds the apiKey header
+      throw new Error(
+        `No response from server for ${request}${code}: ${error.message}`,
+        { cause: error.cause }
+      );
     }
     const { status, data, statusText, headers } = error.response;
-    const multipart = !!error.config?.url?.endsWith("/test-runs/multipart");
-    const hint = errorHint(status, headers["retry-after"], multipart);
-    const message = `${request} returned ${status}: ${serverMessage(data) || statusText || error.message}`;
-    throw new Error(hint ? `${message}. ${hint}` : message);
+    const fromServer = serverMessage(data);
+    const detail = fromServer || statusText || error.message;
+    const hint = errorHint(status, url, headers["retry-after"], !!fromServer);
+    throw new Error(
+      `${request} returned ${status}: ${
+        hint ? `${detail.replace(/\.$/, "")}. ${hint}` : detail
+      }`
+    );
   }
 
   private getFormData(

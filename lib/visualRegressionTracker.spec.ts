@@ -1,6 +1,12 @@
-import axios, { AxiosError, AxiosHeaders, AxiosResponse } from "axios";
+import axios, {
+  AxiosError,
+  AxiosHeaders,
+  AxiosRequestHeaders,
+  AxiosResponse,
+} from "axios";
 import { mocked } from "jest-mock";
 import FormData from "form-data";
+import { inspect } from "util";
 import { testRunOkResponse, testRunUnresolvedResponse } from "./__data__";
 import { VisualRegressionTracker } from "./visualRegressionTracker";
 import {
@@ -591,7 +597,17 @@ describe("VisualRegressionTracker", () => {
       [
         "404 names the request and the server's reason",
         axiosError(404, errorBody(404, "Build 1312 not found")),
-        `${request} returned 404: Build 1312 not found. Check apiUrl and project.`,
+        `${request} returned 404: Build 1312 not found`,
+      ],
+      [
+        "404 without a server body asks to check apiUrl",
+        axiosError(404, "<html>404</html>", {}, "Not Found"),
+        `${request} returned 404: Not Found. Check apiUrl and project.`,
+      ],
+      [
+        "server message ending with a period is not doubled",
+        axiosError(409, errorBody(409, "Nothing to revert.")),
+        `${request} returned 409: Nothing to revert. Another change to the same build or project is in progress; try again.`,
       ],
       [
         "409 asks to try again",
@@ -605,6 +621,17 @@ describe("VisualRegressionTracker", () => {
         "413 suggests multipart or BODY_PARSER_JSON_LIMIT",
         axiosError(413, "<html>413</html>", {}, "Payload Too Large"),
         `${request} returned 413: Payload Too Large. Track the image with imagePath or imageBuffer (multipart) instead of imageBase64, or raise BODY_PARSER_JSON_LIMIT on the server.`,
+      ],
+      [
+        "413 on builds only mentions BODY_PARSER_JSON_LIMIT",
+        axiosError(
+          413,
+          "",
+          {},
+          "Payload Too Large",
+          "http://localhost:4200/builds"
+        ),
+        `POST http://localhost:4200/builds returned 413: Payload Too Large. Raise BODY_PARSER_JSON_LIMIT on the server.`,
       ],
       [
         "413 on multipart mentions MULTIPART_FILE_SIZE_LIMIT",
@@ -666,21 +693,41 @@ describe("VisualRegressionTracker", () => {
       );
     });
 
-    it("keeps the network error as cause", async () => {
+    describe("network error", () => {
+      const cause = Object.assign(
+        new Error("connect ECONNREFUSED 127.0.0.1:4200"),
+        { code: "ECONNREFUSED" }
+      );
       const error: AxiosError = {
         isAxiosError: true,
         toJSON: jest.fn(),
         name: "AxiosError",
         message: "connect ECONNREFUSED 127.0.0.1:4200",
-        config: { headers, method: "post", url: "http://localhost:4200/builds" },
+        code: "ECONNREFUSED",
+        cause,
+        config: {
+          headers: { apiKey: config.apiKey } as unknown as AxiosRequestHeaders,
+          method: "post",
+          url: "http://localhost:4200/builds",
+        },
       };
 
-      const thrown = await vrt["handleException"](error).catch((e) => e);
+      it("names the request and the error code", async () => {
+        const thrown = await vrt["handleException"](error).catch((e) => e);
 
-      expect(thrown.message).toBe(
-        "No response from server for POST http://localhost:4200/builds: connect ECONNREFUSED 127.0.0.1:4200"
-      );
-      expect(thrown.cause).toBe(error);
+        expect(thrown.message).toBe(
+          "No response from server for POST http://localhost:4200/builds (ECONNREFUSED): connect ECONNREFUSED 127.0.0.1:4200"
+        );
+        expect(thrown.cause).toBe(cause);
+      });
+
+      it("does not expose the apiKey", async () => {
+        const thrown = await vrt["handleException"](error).catch((e) => e);
+
+        expect(inspect(thrown, { depth: Infinity })).not.toContain(
+          config.apiKey
+        );
+      });
     });
 
     it("names an unknown request when the error has no config", async () => {
