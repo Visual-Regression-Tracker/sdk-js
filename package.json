@@ -1,9 +1,12 @@
 {
   "name": "@visual-regression-tracker/sdk-js",
-  "version": "5.5.1",
+  "version": "0.0.0-development",
   "description": "JavaScript SDK for Visual Regression Tracker",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "jest",
     "test:cov": "jest --collectCoverage",

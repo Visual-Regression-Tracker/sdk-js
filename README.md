@@ -1,170 +1,144 @@
-# JS SDK for [Visual Regression Tracker](https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker)
+# JavaScript SDK for [Visual Regression Tracker](https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker)
 
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Visual-Regression-Tracker_sdk-js&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Visual-Regression-Tracker_sdk-js)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Visual-Regression-Tracker_sdk-js&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Visual-Regression-Tracker_sdk-js)
+[![npm](https://img.shields.io/npm/v/@visual-regression-tracker/sdk-js)](https://www.npmjs.com/package/@visual-regression-tracker/sdk-js)
 
-## Npm
+Sends screenshots to a Visual Regression Tracker server and reports whether they match the baseline.
+The [Playwright](https://github.com/Visual-Regression-Tracker/agent-playwright), [Cypress](https://github.com/Visual-Regression-Tracker/agent-cypress) and [CodeceptJS](https://github.com/Visual-Regression-Tracker/agent-codeceptjs) agents are built on it.
 
-https://www.npmjs.com/package/@visual-regression-tracker/sdk-js
+## Requirements
+
+- Node.js 18 or later
+- Visual Regression Tracker server 5.0.8 or later; 6 is recommended
 
 ## Install
 
-`npm install @visual-regression-tracker/sdk-js`
-
-## Usage
-
-### Import
-
-```js
-import {
-  VisualRegressionTracker,
-  Config,
-} from "@visual-regression-tracker/sdk-js";
+```sh
+npm install --save-dev @visual-regression-tracker/sdk-js
 ```
 
-### Configure
+## Configuration
 
-#### Explicit config from code
+| Option | Environment variable | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `apiUrl` | `VRT_APIURL` | yes | | URL of the server API, e.g. `http://localhost:4200` |
+| `apiKey` | `VRT_APIKEY` | yes | | API key of a user with access to the project |
+| `project` | `VRT_PROJECT` | yes | | Project name or ID |
+| `branchName` | `VRT_BRANCHNAME` | yes | | Current git branch |
+| `sourceBranch` | `VRT_SOURCEBRANCH` | no | project's main branch | Branch to take baselines from while `branchName` has none of its own |
+| `ciBuildId` | `VRT_CIBUILDID` | no | | ID of one CI build; machines with the same ID share a build |
+| `enableSoftAssert` | `VRT_ENABLESOFTASSERT` | no | `false` | Log failed comparisons instead of throwing |
 
-```js
+Pass the options to the constructor:
+
+```ts
+import { VisualRegressionTracker, Config } from "@visual-regression-tracker/sdk-js";
+
 const config: Config = {
-  // URL where backend is running
-  // Required
   apiUrl: "http://localhost:4200",
-
-  // Project name or ID
-  // Required
-  project: "Default project",
-
-  // User apiKey
-  // Required
   apiKey: "tXZVHX0EA4YQM1MGDD",
-
-  // Current git branch
-  // Required
+  project: "Default project",
   branchName: "develop",
-
-  // Branch to take baselines from instead of the project's main branch
-  // (a newer baseline on branchName still wins)
-  // Optional - default is the project's main branch
-  sourceBranch: "release-1.2",
-
-  // Log errors instead of throwing exceptions
-  // Optional - default false
-  enableSoftAssert: true,
-
-  // Unique ID related to one CI build
-  // Optional - default null
-  ciBuildId: "SOME_UNIQUE_ID",
 };
+const vrt = new VisualRegressionTracker(config);
 ```
 
-#### Or, as JSON config file `vrt.json`
-
-_Used only if not explicit config provided_
-_Is overriden if ENV variables are present_
+Or call `new VisualRegressionTracker()` without a config. The options are then read from `vrt.json` in the working directory, with the same keys:
 
 ```json
 {
   "apiUrl": "http://localhost:4200",
-  "project": "Default project",
   "apiKey": "tXZVHX0EA4YQM1MGDD",
-  "ciBuildId": "commit_sha",
+  "project": "Default project",
   "branchName": "develop",
   "sourceBranch": "release-1.2",
+  "ciBuildId": "commit_sha",
   "enableSoftAssert": false
 }
 ```
 
-#### Or, as environment variables
+Environment variables override `vrt.json` key by key. An explicit config is used as it is: `vrt.json` and the environment are not read.
 
-_Used only if not explicit config provided_
+`baselineBranchName` (`VRT_BASELINEBRANCHNAME`) is a deprecated alias of `sourceBranch`. It still works and logs a warning once.
 
-```
-VRT_APIURL="http://localhost:4200"
-VRT_PROJECT="Default project"
-VRT_APIKEY="tXZVHX0EA4YQM1MGDD"
-VRT_CIBUILDID="commit_sha"
-VRT_BRANCHNAME="develop"
-VRT_SOURCEBRANCH="release-1.2"
-VRT_ENABLESOFTASSERT=true
-```
+## Usage
 
-#### `baselineBranchName` is deprecated
+```ts
+await vrt.start();
 
-`baselineBranchName` (`VRT_BASELINEBRANCHNAME`) was never read by the server. It still
-works as an alias of `sourceBranch` and logs a warning once. Within one source
-(explicit config, `vrt.json` or environment) `sourceBranch` wins over the alias;
-across sources the usual order applies, so `VRT_BASELINEBRANCHNAME` overrides
-`sourceBranch` from `vrt.json`. Rename it to `sourceBranch`.
+const result = await vrt.track({
+  name: "Home page",
+  imagePath: "./screenshots/home.png",
+});
 
-### Setup
-
-```js
-vrt.start();
+await vrt.stop();
 ```
 
-### Teardown
+`track()` takes the image in one of three forms:
 
-```js
-vrt.stop();
-```
+- `imageBase64`: a base64 string, sent as JSON;
+- `imagePath`: a PNG file, sent as multipart;
+- `imageBuffer`: a PNG `Buffer`, sent as multipart.
 
-### Assert
+Prefer `imagePath` or `imageBuffer`. Large base64 screenshots can exceed the server's JSON body limit.
 
-```js
-const result = await vrt.track(
-  {
-    // Name to be displayed
-    // Required
-    name: "Image name",
+The other `track()` fields are optional:
 
-    // Image, one of imageBase64, imagePath or imageBuffer is required
-    // Base64 encoded string, sent as JSON
-    imageBase64: image,
-    // Path to a PNG file, sent as multipart (service version api:4.14.0 or higher)
-    imagePath: "./screenshots/home.png",
-    // PNG as a Buffer, sent as multipart
-    imageBuffer: buffer,
+| Field | Description |
+| --- | --- |
+| `os`, `browser`, `viewport`, `device`, `customTags` | Tell baselines of the same name apart |
+| `diffTollerancePercent` | Allowed difference, in percent of all pixels (the spelling is the API's) |
+| `ignoreAreas` | `[{ x, y, width, height }]` in pixels, left out of the comparison |
+| `comment` | Shown with the test run |
 
-    // Allowed mismatch % (mismatched pixels to overal pixels count)
-    // Optional
-    diffTollerancePercent: 0,
+The second argument of `track()` is how many more times to submit the image while the result is `unresolved`. The default is 2.
 
-    // Optional
-    os: "Mac",
+## Results and statuses
 
-    // Optional
-    browser: "Chrome",
+`track()` resolves to a `TestRunResult`:
 
-    // Optional
-    viewport: "800x600",
+- `testRunResponse` holds the server's answer, including `id`, `status` and `url`. `url` is the test run in the web UI.
+- `imageUrl`, `diffUrl` and `baselineUrl` link to `{apiUrl}/images/{name}`.
 
-    // Optional
-    device: "PC",
+| Status | Outcome |
+| --- | --- |
+| `new` | No baseline yet: throws, or logs with `enableSoftAssert` |
+| `unresolved` | Differs from the baseline: throws, or logs with `enableSoftAssert` |
+| `ok`, `approved`, `autoApproved` | Passes |
+| `failed` | A reviewer rejected it: passes with a warning |
+| anything else | Passes with a warning, so newer servers do not break older SDKs |
 
-    // Optional
-    customTags: "Cloud, DarkTheme, Auth",
+## Errors
 
-    // Areas to be ignored: x and y of the upper left corner, width and height, in px
-    // Optional
-    ignoreAreas: [{ x: 10, y: 20, width: 300, height: 400 }],
+A failed request throws an `Error` that names the request, the HTTP status and the server's message. For common causes it adds a hint:
 
-    // Allow additional details
-    // Optional
-    comment: "Ignoring region because of animation",
-  },
-  // How many more times to submit the image while the result is unresolved
-  // Optional - default 2
-  2
-);
+- 401: check `apiKey`
+- 403: the user has no access to the project
+- 404: check `apiUrl` and `project`
+- 409: another change to the same build is in progress
+- 413: the image is over the server's body limit
+- 422: the image has more pixels than the server's `MAX_IMAGE_PIXELS`
+- 503: the server is busy
 
-// result.testRunResponse.status, result.imageUrl, result.diffUrl, result.baselineUrl
-```
+When the server cannot be reached, the message says so and keeps the network error as `cause`. The API key never appears in error messages.
 
-`imageUrl`, `diffUrl` and `baselineUrl` point to `{apiUrl}/images/{name}`, which
-needs VRT API 5.0.8 or later.
+## Examples
 
-Large screenshots in `imageBase64` can exceed the server's JSON body limit
-(`BODY_PARSER_JSON_LIMIT`, HTTP 413); `imagePath` and `imageBuffer` are sent as
-multipart and are not affected.
+[examples-js](https://github.com/Visual-Regression-Tracker/examples-js)
+
+## Releasing
+
+Every push to `master` runs [semantic-release](https://semantic-release.gitbook.io). It reads the [Conventional Commits](https://www.conventionalcommits.org) since the last `v*` tag:
+
+| Commit | Release |
+| --- | --- |
+| `fix:` | patch |
+| `feat:` | minor |
+| `feat!:` or a `BREAKING CHANGE:` footer | major |
+| `chore:`, `ci:`, `docs:`, `test:` | none |
+
+It then publishes to npm through trusted publishing with provenance, tags `vX.Y.Z`, and writes the GitHub release.
+The `version` field in `package.json` is a placeholder. The released version lives in the tags and on npm.
+
+## License
+
+[Apache-2.0](LICENSE)
