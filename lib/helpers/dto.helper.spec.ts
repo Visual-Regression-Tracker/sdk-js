@@ -151,3 +151,42 @@ describe("deprecated baselineBranchName", () => {
     );
   });
 });
+
+describe.each([
+  [
+    "multipartDtoToFormData",
+    () => {
+      fsMock.createReadStream.mockReturnValueOnce(
+        "mocked Image" as unknown as fs.ReadStream
+      );
+      fsMock.statSync.mockReturnValueOnce({ size: 1234 } as fs.Stats);
+      return (merge: boolean) =>
+        multipartDtoToFormData({
+          branchName: "develop",
+          projectId: "projectId",
+          buildId: "buildId",
+          name: "name",
+          imagePath: "./lib/__data__/2.png",
+          merge,
+        });
+    },
+  ],
+  [
+    "bufferDtoToFormData",
+    () => (merge: boolean) =>
+      bufferDtoToFormData({
+        branchName: "develop",
+        projectId: "projectId",
+        buildId: "buildId",
+        name: "name",
+        imageBuffer: Buffer.of(1, 2, 3),
+        merge,
+      }),
+  ],
+])("%s", (_, converter) => {
+  it.each([true, false])("sends merge %p", (merge) => {
+    converter()(merge);
+
+    expect(appendSpy).toHaveBeenCalledWith("merge", String(merge));
+  });
+});

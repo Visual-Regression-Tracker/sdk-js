@@ -39,6 +39,7 @@ describe("config.helper", () => {
       apiKey: "apiKeyUpdated",
       enableSoftAssert: false,
       ciBuildId: "ciBuildIdUpdated",
+      httpTimeoutInSeconds: 30,
     };
 
     it("should read from file", () => {
@@ -64,6 +65,17 @@ describe("config.helper", () => {
 
       expect(result.sourceBranch).toBe("release");
       expect(result.baselineBranchName).toBeUndefined();
+    });
+
+    it("should read httpTimeoutInSeconds 0 as no limit", () => {
+      mockedFs.existsSync.mockReturnValueOnce(true);
+      mockedFs.readFileSync.mockReturnValueOnce(
+        Buffer.from(JSON.stringify({ httpTimeoutInSeconds: 0 }), "utf8")
+      );
+
+      const result = readConfigFromFile({ ...initialConfig });
+
+      expect(result.httpTimeoutInSeconds).toBe(0);
     });
 
     it("should be skipped if no value", () => {
@@ -105,6 +117,7 @@ describe("config.helper", () => {
         VRT_PROJECT: "projectTest",
         VRT_APIKEY: "apiKeyTest",
         VRT_ENABLESOFTASSERT: "false",
+        VRT_HTTPTIMEOUTINSECONDS: "30",
       };
 
       const result = readConfigFromEnv(initialConfig);
@@ -117,7 +130,15 @@ describe("config.helper", () => {
         project: "projectTest",
         apiKey: "apiKeyTest",
         enableSoftAssert: false,
+        httpTimeoutInSeconds: 30,
       });
+    });
+    it("should read VRT_HTTPTIMEOUTINSECONDS=0 as no limit", () => {
+      process.env = { ...process.env, VRT_HTTPTIMEOUTINSECONDS: "0" };
+
+      const result = readConfigFromEnv({ ...initialConfig });
+
+      expect(result.httpTimeoutInSeconds).toBe(0);
     });
     it("should let deprecated VRT_BASELINEBRANCHNAME override sourceBranch from file", () => {
       jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -147,6 +168,7 @@ describe("config.helper", () => {
         VRT_PROJECT: undefined,
         VRT_APIKEY: undefined,
         VRT_ENABLESOFTASSERT: undefined,
+        VRT_HTTPTIMEOUTINSECONDS: undefined,
       };
 
       const result = readConfigFromEnv(initialConfig);
@@ -213,6 +235,25 @@ describe("config.helper", () => {
     it("valid", () => {
       expect(() => validateConfig(initialConfig)).not.toThrow();
     });
+
+    it.each([0, 0.5, 360])("accepts httpTimeoutInSeconds %p", (seconds) => {
+      expect(() =>
+        validateConfig({ ...initialConfig, httpTimeoutInSeconds: seconds })
+      ).not.toThrow();
+    });
+
+    it.each([-1, NaN, Infinity, "30", true])(
+      "rejects httpTimeoutInSeconds %p",
+      (seconds) => {
+        expect(() =>
+          validateConfig({ ...initialConfig, httpTimeoutInSeconds: seconds as number })
+        ).toThrow(
+          new Error(
+            "httpTimeoutInSeconds must be a non-negative number of seconds, 0 for no limit"
+          )
+        );
+      }
+    );
 
     it.each([
       [

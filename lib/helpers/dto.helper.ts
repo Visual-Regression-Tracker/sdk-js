@@ -22,6 +22,7 @@ export const multipartDtoToFormData = (dto: TestRunMultipartDto): FormData => {
   dto.diffTollerancePercent &&
     data.append("diffTollerancePercent", dto.diffTollerancePercent);
   dto.comment && data.append("comment", dto.comment);
+  dto.merge !== undefined && data.append("merge", String(dto.merge));
 
   return data;
 };
@@ -44,6 +45,7 @@ export const bufferDtoToFormData = (dto: TestRunBufferDto): FormData => {
   dto.diffTollerancePercent &&
     data.append("diffTollerancePercent", dto.diffTollerancePercent);
   dto.comment && data.append("comment", dto.comment);
+  dto.merge !== undefined && data.append("merge", String(dto.merge));
 
   return data;
 };

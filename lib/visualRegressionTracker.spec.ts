@@ -6,9 +6,11 @@ import axios, {
 } from "axios";
 import { mocked } from "jest-mock";
 import FormData from "form-data";
+import http from "http";
+import https from "https";
 import { inspect } from "util";
 import { testRunOkResponse, testRunUnresolvedResponse } from "./__data__";
-import { VisualRegressionTracker } from "./visualRegressionTracker";
+import { ServerError, VisualRegressionTracker } from "./visualRegressionTracker";
 import {
   Config,
   BuildResponse,
@@ -81,6 +83,16 @@ const config: Config = {
   apiKey: "CPKVK4JNK24NVNPNGVFQ853HXXEG",
   enableSoftAssert: false,
   ciBuildId: "someCIBuildId",
+};
+
+const requestOptions = {
+  headers: {
+    apiKey: config.apiKey,
+    project: config.project,
+  },
+  timeout: 360_000,
+  httpAgent: expect.any(http.Agent),
+  httpsAgent: expect.any(https.Agent),
 };
 
 const testRunBase64: TestRunBase64 = {
@@ -266,7 +278,7 @@ describe("VisualRegressionTracker", () => {
       vrt["buildId"] = buildId;
       vrt["projectId"] = projectId;
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      vrt["submitTestRunMultipart"] = jest.fn().mockResolvedValueOnce(responce);
+      mockedAxios.post.mockResolvedValueOnce({ data: responce });
       mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(data);
 
       await vrt.track(testRunMultipart);
@@ -278,8 +290,12 @@ describe("VisualRegressionTracker", () => {
         sourceBranch: config.sourceBranch,
         ...testRunMultipart,
       });
-      expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledTimes(1);
-      expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledWith(data);
+      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        `${config.apiUrl}/test-runs/multipart`,
+        data,
+        expect.objectContaining({ timeout: 360_000 })
+      );
       expect(mockedTestRunResult).toHaveBeenCalledWith(
         responce,
         "http://localhost:4200"
@@ -294,8 +310,8 @@ describe("VisualRegressionTracker", () => {
       vrt["buildId"] = buildId;
       vrt["projectId"] = projectId;
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      vrt["submitTestRunMultipart"] = jest.fn().mockResolvedValue(responce);
-      mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(data);
+      mockedAxios.post.mockResolvedValue({ data: responce });
+      mockedDtoHelper.multipartDtoToFormData.mockReturnValue(data);
 
       await expect(vrt.track(testRunMultipart, 3)).rejects.toThrow(
         "Difference found: url"
@@ -307,8 +323,7 @@ describe("VisualRegressionTracker", () => {
         sourceBranch: config.sourceBranch,
         ...testRunMultipart,
       });
-      expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledTimes(4);
-      expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledWith(data);
+      expect(mockedAxios.post).toHaveBeenCalledTimes(4);
     });
 
     it("should track buffer", async () => {
@@ -319,7 +334,7 @@ describe("VisualRegressionTracker", () => {
       vrt["buildId"] = buildId;
       vrt["projectId"] = projectId;
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      vrt["submitTestRunMultipart"] = jest.fn().mockResolvedValueOnce(responce);
+      mockedAxios.post.mockResolvedValueOnce({ data: responce });
       mockedDtoHelper.bufferDtoToFormData.mockReturnValueOnce(data);
 
       await vrt.track(testRunBuffer);
@@ -331,7 +346,11 @@ describe("VisualRegressionTracker", () => {
         sourceBranch: config.sourceBranch,
         ...testRunBuffer,
       });
-      expect(vrt["submitTestRunMultipart"]).toHaveBeenCalledWith(data);
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        `${config.apiUrl}/test-runs/multipart`,
+        data,
+        expect.anything()
+      );
       expect(mockedTestRunResult).toHaveBeenCalledWith(
         responce,
         "http://localhost:4200"
@@ -358,12 +377,7 @@ describe("VisualRegressionTracker", () => {
           project: config.project,
           ciBuildId: config.ciBuildId,
         },
-        {
-          headers: {
-            apiKey: config.apiKey,
-            project: config.project,
-          },
-        }
+        requestOptions
       );
       expect(vrt["buildId"]).toBe(buildId);
       expect(vrt["projectId"]).toBe(projectId);
@@ -414,12 +428,7 @@ describe("VisualRegressionTracker", () => {
       expect(mockedAxios.patch).toHaveBeenCalledWith(
         `${config.apiUrl}/builds/${buildId}`,
         { isRunning: false },
-        {
-          headers: {
-            apiKey: config.apiKey,
-            project: config.project,
-          },
-        }
+        requestOptions
       );
     });
 
@@ -502,12 +511,7 @@ describe("VisualRegressionTracker", () => {
           browser: testRunBase64.browser,
           ignoreAreas: testRunBase64.ignoreAreas,
         },
-        {
-          headers: {
-            apiKey: config.apiKey,
-            project: config.project,
-          },
-        }
+        requestOptions
       );
     });
 
@@ -531,17 +535,19 @@ describe("VisualRegressionTracker", () => {
   describe("submitTestRunMultipart", () => {
     it("should submit test run", async () => {
       const data = new FormData();
+      mockedDtoHelper.bufferDtoToFormData.mockReturnValueOnce(data);
       mockedAxios.post.mockResolvedValueOnce({
         data: testRunUnresolvedResponse,
       });
 
-      const result = await vrt["submitTestRunMultipart"](data);
+      const result = await vrt["submitTestRunMultipart"](testRunBuffer);
 
       expect(result).toBe(testRunUnresolvedResponse);
       expect(mockedAxios.post).toHaveBeenCalledWith(
         `${config.apiUrl}/test-runs/multipart`,
         data,
         {
+          ...requestOptions,
           headers: expect.objectContaining({
             apiKey: config.apiKey,
             project: config.project,
@@ -556,7 +562,8 @@ describe("VisualRegressionTracker", () => {
       vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
       mockedAxios.post.mockRejectedValueOnce(axiosError401);
       try {
-        await vrt["submitTestRunMultipart"](new FormData());
+        mockedDtoHelper.bufferDtoToFormData.mockReturnValueOnce(new FormData());
+        await vrt["submitTestRunMultipart"](testRunBuffer);
       } catch {}
       expect(handleExceptionMock).toHaveBeenCalledWith(axiosError401);
     });
@@ -755,5 +762,70 @@ describe("VisualRegressionTracker", () => {
         "No response from server for VRT request: boom"
       );
     });
+  });
+  describe("http timeout", () => {
+    it.each([
+      [30, 30_000],
+      [0, 0],
+    ])("sends httpTimeoutInSeconds %p as an axios timeout of %p ms", async (seconds, ms) => {
+      mockedAxios.post.mockResolvedValueOnce({ data: { id: "1", projectId: "2" } });
+
+      await new VisualRegressionTracker({ ...config, httpTimeoutInSeconds: seconds }).start();
+
+      expect(mockedAxios.post.mock.calls[0][2]).toMatchObject({ timeout: ms });
+    });
+  });
+
+  describe("503 with Retry-After", () => {
+    it("sends the request again", async () => {
+      jest.spyOn(console, "warn").mockImplementation(() => {});
+      const build = { id: "1", projectId: "2" };
+      mockedAxios.post
+        .mockRejectedValueOnce(axiosError(503, errorBody(503, "Busy"), { "retry-after": "0" }))
+        .mockResolvedValueOnce({ data: build });
+
+      await expect(vrt.start()).resolves.toBe(build);
+      expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+    });
+
+    it("builds the multipart body again for each attempt", async () => {
+      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vrt["buildId"] = "1312";
+      vrt["projectId"] = "asd";
+      mockedDtoHelper.bufferDtoToFormData.mockImplementation(() => new FormData());
+      mockedAxios.post
+        .mockRejectedValueOnce(axiosError(503, errorBody(503, "Busy"), { "retry-after": "0" }))
+        .mockResolvedValueOnce({ data: testRunOkResponse });
+
+      await vrt.track(testRunBuffer);
+
+      const [first, second] = mockedAxios.post.mock.calls.map((call) => call[1]);
+      expect(second).not.toBe(first);
+    });
+  });
+
+  describe("ServerError", () => {
+    it("carries the status and the server's message", async () => {
+      const thrown = await vrt["handleException"](axiosError401).catch((e) => e);
+
+      expect(thrown).toBeInstanceOf(ServerError);
+      expect(thrown.status).toBe(401);
+      expect(thrown.serverMessage).toBe("Unauthorized");
+    });
+
+    it("is not used when the server did not answer", async () => {
+      const thrown = await vrt["handleException"](
+        new Error("boom") as AxiosError
+      ).catch((e) => e);
+
+      expect(thrown).not.toBeInstanceOf(ServerError);
+    });
+  });
+  it("creates no HTTP agent while the module loads, so browser bundles can import it", () => {
+    const agent = jest.spyOn(http, "Agent");
+
+    jest.isolateModules(() => require("./visualRegressionTracker"));
+
+    expect(agent).not.toHaveBeenCalled();
   });
 });

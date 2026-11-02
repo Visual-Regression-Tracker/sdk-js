@@ -27,6 +27,7 @@ npm install --save-dev @visual-regression-tracker/sdk-js
 | `sourceBranch` | `VRT_SOURCEBRANCH` | no | project's main branch | Branch to take baselines from while `branchName` has none of its own |
 | `ciBuildId` | `VRT_CIBUILDID` | no | | ID of one CI build; machines with the same ID share a build |
 | `enableSoftAssert` | `VRT_ENABLESOFTASSERT` | no | `false` | Log failed comparisons instead of throwing |
+| `httpTimeoutInSeconds` | `VRT_HTTPTIMEOUTINSECONDS` | no | `360` | How long to wait for each response; `0` means no limit. Connecting always times out after 10 s |
 
 Pass the options to the constructor:
 
@@ -52,7 +53,8 @@ Or call `new VisualRegressionTracker()` without a config. The options are then r
   "branchName": "develop",
   "sourceBranch": "release-1.2",
   "ciBuildId": "commit_sha",
-  "enableSoftAssert": false
+  "enableSoftAssert": false,
+  "httpTimeoutInSeconds": 360
 }
 ```
 
@@ -89,6 +91,7 @@ The other `track()` fields are optional:
 | `diffTollerancePercent` | Allowed difference, in percent of all pixels (the spelling is the API's) |
 | `ignoreAreas` | `[{ x, y, width, height }]` in pixels, left out of the comparison |
 | `comment` | Shown with the test run |
+| `merge` | `true` marks a run of a merge into the main branch: approving it updates the main branch's baseline instead of `branchName`'s |
 
 The second argument of `track()` is how many more times to submit the image while the result is `unresolved`. The default is 2.
 
@@ -109,7 +112,7 @@ The second argument of `track()` is how many more times to submit the image whil
 
 ## Errors
 
-A failed request throws an `Error` that names the request, the HTTP status and the server's message. For common causes it adds a hint:
+A request the server answered with an error throws a `ServerError`. Its `message` names the request, the HTTP status and the server's message; `status` and `serverMessage` hold them separately. For common causes the message adds a hint:
 
 - 401: check `apiKey`
 - 403: the user has no access to the project
@@ -118,6 +121,8 @@ A failed request throws an `Error` that names the request, the HTTP status and t
 - 413: the image is over the server's body limit
 - 422: the image has more pixels than the server's `MAX_IMAGE_PIXELS`
 - 503: the server is busy
+
+A 503 that carries `Retry-After` is not thrown at first. The SDK waits as long as the header says, up to 60 s, and sends the request again, at most 3 times.
 
 When the server cannot be reached, the message says so and keeps the network error as `cause`. The API key never appears in error messages.
 

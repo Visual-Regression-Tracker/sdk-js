@@ -10,6 +10,7 @@ interface TestRun {
   diffTollerancePercent?: number;
   ignoreAreas?: IgnoreArea[];
   comment?: string;
+  merge?: boolean;
 }
 
 export interface TestRunBase64 extends TestRun {
