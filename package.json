@@ -23,18 +23,39 @@
   },
   "homepage": "https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker",
   "dependencies": {
-    "axios": "^1.20.0",
+    "axios": "^1.21.0",
     "form-data": "^4.0.6"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^22.20.5",
     "jest": "^30.5.2",
-    "semantic-release": "^25.0.9",
     "ts-jest": "^29.4.15",
     "typescript": "^6.0.3"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "overrides": {
+    "glob": "^14.0.2",
+    "minimatch": "^11.0.1"
+  },
+  "release": {
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits"
+        }
+      ],
+      [
+        "@semantic-release/release-notes-generator",
+        {
+          "preset": "conventionalcommits"
+        }
+      ],
+      "@semantic-release/npm",
+      "@semantic-release/github"
+    ]
   }
 }
