@@ -12,7 +12,7 @@ import {
 } from "../__data__";
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
@@ -40,7 +40,7 @@ describe.each<[TestStatus.new | TestStatus.unresolved, string]>([
   });
 
   it(`enabled soft assert should log error if status ${status}`, () => {
-    jest.spyOn(console, "error").mockImplementation();
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const enableSoftAssert = true;
 
     processTestRun(testRunUnresolvedResponse, enableSoftAssert);
@@ -71,8 +71,8 @@ const okResponce: TestRunResponse = {
 
 describe("processTestRun with a status that does not fail the test", () => {
   beforeEach(() => {
-    jest.spyOn(console, "warn").mockImplementation();
-    jest.spyOn(console, "error").mockImplementation();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   it.each([TestStatus.ok, TestStatus.approved, TestStatus.autoApproved])(
@@ -94,7 +94,7 @@ describe("processTestRun with a status that does not fail the test", () => {
   });
 
   it("warns about a rejected test run from trackWithRetry with soft assert", async () => {
-    const trackMock = jest
+    const trackMock = vi
       .fn()
       .mockResolvedValue({ ...testRunOkResponse, status: TestStatus.failed });
 
@@ -119,7 +119,7 @@ describe("processTestRun with a status that does not fail the test", () => {
 
 it("should stop when diff not found", async () => {
   // .Arrange
-  const trackMock = jest.fn().mockReturnValue(okResponce);
+  const trackMock = vi.fn().mockReturnValue(okResponce);
 
   // .Act
   await trackWithRetry(trackMock, 5);
@@ -130,7 +130,7 @@ it("should stop when diff not found", async () => {
 
 it("should stop on default retry limit", async () => {
   // .Arrange
-  const trackMock = jest.fn().mockReturnValue(unresolvedResponce);
+  const trackMock = vi.fn().mockReturnValue(unresolvedResponce);
 
   // .Act
   await trackWithRetry(trackMock, undefined as unknown as number, true);
@@ -141,7 +141,7 @@ it("should stop on default retry limit", async () => {
 
 it("should stop on custom retry limit", async () => {
   // .Arrange
-  const trackMock = jest.fn().mockReturnValue(unresolvedResponce);
+  const trackMock = vi.fn().mockReturnValue(unresolvedResponce);
 
   // .Act
   await trackWithRetry(trackMock, 5, true);
