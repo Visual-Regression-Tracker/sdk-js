@@ -1,13 +1,12 @@
 import { multipartDtoToFormData, bufferDtoToFormData } from "./index";
 import { TestRunBufferDto, TestRunMultipartDto } from "../types";
-import { mocked } from "jest-mock";
 import * as fs from "fs";
 import FormData from "form-data";
 
-jest.mock("fs");
-const fsMock = mocked(fs);
+vi.mock("fs");
+const fsMock = vi.mocked(fs);
 
-const appendSpy = jest.spyOn(FormData.prototype, "append");
+const appendSpy = vi.spyOn(FormData.prototype, "append");
 
 beforeEach(() => {
   appendSpy.mockClear();

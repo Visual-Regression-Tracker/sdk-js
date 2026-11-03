@@ -16,8 +16,8 @@ const unavailable = (retryAfter?: string) => ({
 
 describe("http.helper", () => {
   afterEach(() => {
-    jest.restoreAllMocks();
-    jest.useRealTimers();
+    vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   describe("withConnectTimeout", () => {
@@ -28,34 +28,34 @@ describe("http.helper", () => {
     };
 
     it("destroys a socket that does not connect in time", () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       const socket = new Socket().on("error", () => {});
       const agent = agentWith(socket);
 
       agent.createConnection({});
-      jest.advanceTimersByTime(10_000);
+      vi.advanceTimersByTime(10_000);
 
       expect(socket.destroyed).toBe(true);
     });
 
     it("names the timeout in the socket error", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       const socket = new Socket();
       const error = new Promise<Error>((resolve) => socket.on("error", resolve));
       agentWith(socket).createConnection({});
 
-      jest.advanceTimersByTime(10_000);
+      vi.advanceTimersByTime(10_000);
 
       expect((await error).message).toBe("Connection timed out after 10 s");
     });
 
     it("keeps a socket that connected in time", () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       const socket = new Socket();
       agentWith(socket).createConnection({});
 
       socket.emit("connect");
-      jest.advanceTimersByTime(10_000);
+      vi.advanceTimersByTime(10_000);
 
       expect(socket.destroyed).toBe(false);
     });
@@ -118,15 +118,15 @@ describe("http.helper", () => {
   });
 
   describe("sendWithRetry", () => {
-    const sleep = jest.fn().mockResolvedValue(undefined);
+    const sleep = vi.fn().mockResolvedValue(undefined);
 
     beforeEach(() => {
       sleep.mockClear();
-      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(console, "warn").mockImplementation(() => {});
     });
 
     it("returns the first successful response", async () => {
-      const send = jest.fn().mockResolvedValueOnce("ok");
+      const send = vi.fn().mockResolvedValueOnce("ok");
 
       await expect(sendWithRetry(send, sleep)).resolves.toBe("ok");
       expect(send).toHaveBeenCalledTimes(1);
@@ -134,7 +134,7 @@ describe("http.helper", () => {
     });
 
     it("waits Retry-After and sends again after a 503", async () => {
-      const send = jest
+      const send = vi
         .fn()
         .mockRejectedValueOnce(unavailable("2"))
         .mockResolvedValueOnce("ok");
@@ -149,7 +149,7 @@ describe("http.helper", () => {
 
     it(`gives up after ${MAX_503_RETRIES} retries`, async () => {
       const error = unavailable("1");
-      const send = jest.fn().mockRejectedValue(error);
+      const send = vi.fn().mockRejectedValue(error);
 
       await expect(sendWithRetry(send, sleep)).rejects.toBe(error);
       expect(send).toHaveBeenCalledTimes(MAX_503_RETRIES + 1);
@@ -157,7 +157,7 @@ describe("http.helper", () => {
 
     it("does not retry a 503 without Retry-After", async () => {
       const error = unavailable();
-      const send = jest.fn().mockRejectedValue(error);
+      const send = vi.fn().mockRejectedValue(error);
 
       await expect(sendWithRetry(send, sleep)).rejects.toBe(error);
       expect(send).toHaveBeenCalledTimes(1);
@@ -167,7 +167,7 @@ describe("http.helper", () => {
       ["another status", { response: { status: 500, headers: { "retry-after": "1" } } }],
       ["a network error", new Error("connect ECONNREFUSED")],
     ])("does not retry %s", async (_, error) => {
-      const send = jest.fn().mockRejectedValue(error);
+      const send = vi.fn().mockRejectedValue(error);
 
       await expect(sendWithRetry(send, sleep)).rejects.toBe(error);
       expect(send).toHaveBeenCalledTimes(1);
