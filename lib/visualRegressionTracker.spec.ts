@@ -4,7 +4,6 @@ import axios, {
   AxiosRequestHeaders,
   AxiosResponse,
 } from "axios";
-import { mocked } from "jest-mock";
 import FormData from "form-data";
 import http from "http";
 import https from "https";
@@ -24,22 +23,22 @@ import TestRunResult from "./testRunResult";
 import * as configHelper from "./helpers/config.helper";
 import * as dtoHelper from "./helpers/dto.helper";
 
-jest.mock("axios");
-const mockedAxios = mocked(axios);
+vi.mock("axios");
+const mockedAxios = vi.mocked(axios);
 
-jest.mock("./testRunResult");
-const mockedTestRunResult = mocked(TestRunResult);
+vi.mock("./testRunResult");
+const mockedTestRunResult = vi.mocked(TestRunResult);
 
-jest.mock("./helpers/config.helper", () => ({
-  ...jest.requireActual("./helpers/config.helper"),
-  readConfigFromFile: jest.fn(),
-  readConfigFromEnv: jest.fn(),
-  validateConfig: jest.fn(),
+vi.mock("./helpers/config.helper", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./helpers/config.helper")>()),
+  readConfigFromFile: vi.fn(),
+  readConfigFromEnv: vi.fn(),
+  validateConfig: vi.fn(),
 }));
-const mockedConfigHelper = mocked(configHelper);
+const mockedConfigHelper = vi.mocked(configHelper);
 
-jest.mock("./helpers/dto.helper");
-const mockedDtoHelper = mocked(dtoHelper);
+vi.mock("./helpers/dto.helper");
+const mockedDtoHelper = vi.mocked(dtoHelper);
 
 const headers = AxiosHeaders.from({
   'Content-Type': 'application/json'
@@ -53,7 +52,7 @@ const axiosError = (
   url = "http://localhost:4200/test-runs"
 ): AxiosError => ({
   isAxiosError: true,
-  toJSON: jest.fn(),
+  toJSON: vi.fn(),
   name: "AxiosError",
   message: `Request failed with status code ${status}`,
   config: { headers, method: "post", url },
@@ -198,7 +197,7 @@ describe("VisualRegressionTracker", () => {
     });
 
     it("should use deprecated baselineBranchName as sourceBranch", () => {
-      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(console, "warn").mockImplementation(() => {});
       const { sourceBranch, ...legacyConfig } = config;
 
       new VisualRegressionTracker({
@@ -231,7 +230,7 @@ describe("VisualRegressionTracker", () => {
 
   describe("track", () => {
     it("should throw if not started", async () => {
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(false);
+      vrt["isStarted"] = vi.fn().mockReturnValueOnce(false);
 
       await expect(
         vrt.track({
@@ -245,8 +244,8 @@ describe("VisualRegressionTracker", () => {
 
     it("should track base64 without retry", async () => {
       const responce = testRunOkResponse;
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      vrt["submitTestRunBase64"] = jest.fn().mockResolvedValue(responce);
+      vrt["isStarted"] = vi.fn().mockReturnValueOnce(true);
+      vrt["submitTestRunBase64"] = vi.fn().mockResolvedValue(responce);
 
       await vrt.track(testRunBase64);
 
@@ -260,8 +259,8 @@ describe("VisualRegressionTracker", () => {
 
     it("should track base64 with retry", async () => {
       const responce = testRunUnresolvedResponse;
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      vrt["submitTestRunBase64"] = jest.fn().mockResolvedValue(responce);
+      vrt["isStarted"] = vi.fn().mockReturnValueOnce(true);
+      vrt["submitTestRunBase64"] = vi.fn().mockResolvedValue(responce);
 
       await expect(vrt.track(testRunBase64, 3)).rejects.toThrow(
         "Difference found: url"
@@ -277,7 +276,7 @@ describe("VisualRegressionTracker", () => {
       const projectId = "asd";
       vrt["buildId"] = buildId;
       vrt["projectId"] = projectId;
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
+      vrt["isStarted"] = vi.fn().mockReturnValueOnce(true);
       mockedAxios.post.mockResolvedValueOnce({ data: responce });
       mockedDtoHelper.multipartDtoToFormData.mockReturnValueOnce(data);
 
@@ -309,7 +308,7 @@ describe("VisualRegressionTracker", () => {
       const projectId = "asd";
       vrt["buildId"] = buildId;
       vrt["projectId"] = projectId;
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
+      vrt["isStarted"] = vi.fn().mockReturnValueOnce(true);
       mockedAxios.post.mockResolvedValue({ data: responce });
       mockedDtoHelper.multipartDtoToFormData.mockReturnValue(data);
 
@@ -333,7 +332,7 @@ describe("VisualRegressionTracker", () => {
       const projectId = "asd";
       vrt["buildId"] = buildId;
       vrt["projectId"] = projectId;
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
+      vrt["isStarted"] = vi.fn().mockReturnValueOnce(true);
       mockedAxios.post.mockResolvedValueOnce({ data: responce });
       mockedDtoHelper.bufferDtoToFormData.mockReturnValueOnce(data);
 
@@ -385,7 +384,7 @@ describe("VisualRegressionTracker", () => {
     });
 
     it("should not send deprecated baselineBranchName", async () => {
-      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(console, "warn").mockImplementation(() => {});
       vrt = new VisualRegressionTracker({
         ...config,
         baselineBranchName: "legacy",
@@ -404,7 +403,7 @@ describe("VisualRegressionTracker", () => {
     });
 
     it("should handle exception", async () => {
-      const handleExceptionMock = jest.fn();
+      const handleExceptionMock = vi.fn();
       vrt["handleException"] = handleExceptionMock;
       mockedAxios.post.mockRejectedValueOnce(axiosError401);
 
@@ -420,7 +419,7 @@ describe("VisualRegressionTracker", () => {
     it("should stop build", async () => {
       const buildId = "1312";
       vrt["buildId"] = buildId;
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
+      vrt["isStarted"] = vi.fn().mockReturnValueOnce(true);
       mockedAxios.patch.mockResolvedValueOnce({});
 
       await vrt["stop"]();
@@ -450,7 +449,7 @@ describe("VisualRegressionTracker", () => {
     });
 
     it("should throw if not started", async () => {
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(false);
+      vrt["isStarted"] = vi.fn().mockReturnValueOnce(false);
 
       await expect(vrt["stop"]()).rejects.toThrow(
         new Error("Visual Regression Tracker has not been started")
@@ -459,8 +458,8 @@ describe("VisualRegressionTracker", () => {
 
     it("should handle exception", async () => {
       vrt["buildId"] = "some id";
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
-      const handleExceptionMock = jest.fn();
+      vrt["isStarted"] = vi.fn().mockReturnValueOnce(true);
+      const handleExceptionMock = vi.fn();
       vrt["handleException"] = handleExceptionMock;
       mockedAxios.patch.mockRejectedValueOnce(axiosError401);
 
@@ -516,9 +515,9 @@ describe("VisualRegressionTracker", () => {
     });
 
     it("should handle exception", async () => {
-      const handleExceptionMock = jest.fn();
+      const handleExceptionMock = vi.fn();
       vrt["handleException"] = handleExceptionMock;
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
+      vrt["isStarted"] = vi.fn().mockReturnValueOnce(true);
       mockedAxios.post.mockRejectedValueOnce(axiosError401);
 
       try {
@@ -557,9 +556,9 @@ describe("VisualRegressionTracker", () => {
     });
 
     it("should handle exception", async () => {
-      const handleExceptionMock = jest.fn();
+      const handleExceptionMock = vi.fn();
       vrt["handleException"] = handleExceptionMock;
-      vrt["isStarted"] = jest.fn().mockReturnValueOnce(true);
+      vrt["isStarted"] = vi.fn().mockReturnValueOnce(true);
       mockedAxios.post.mockRejectedValueOnce(axiosError401);
       try {
         mockedDtoHelper.bufferDtoToFormData.mockReturnValueOnce(new FormData());
@@ -711,8 +710,9 @@ describe("VisualRegressionTracker", () => {
         `${request} returned 502: Request failed with status code 502`,
       ],
     ])("%s", async (_, error, expectedMessage) => {
-      await expect(vrt["handleException"](error)).rejects.toThrow(
-        new Error(expectedMessage)
+      await expect(vrt["handleException"](error)).rejects.toHaveProperty(
+        "message",
+        expectedMessage
       );
     });
 
@@ -723,7 +723,7 @@ describe("VisualRegressionTracker", () => {
       );
       const error: AxiosError = {
         isAxiosError: true,
-        toJSON: jest.fn(),
+        toJSON: vi.fn(),
         name: "AxiosError",
         message: "connect ECONNREFUSED 127.0.0.1:4200",
         code: "ECONNREFUSED",
@@ -778,7 +778,7 @@ describe("VisualRegressionTracker", () => {
 
   describe("503 with Retry-After", () => {
     it("sends the request again", async () => {
-      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(console, "warn").mockImplementation(() => {});
       const build = { id: "1", projectId: "2" };
       mockedAxios.post
         .mockRejectedValueOnce(axiosError(503, errorBody(503, "Busy"), { "retry-after": "0" }))
@@ -789,7 +789,7 @@ describe("VisualRegressionTracker", () => {
     });
 
     it("builds the multipart body again for each attempt", async () => {
-      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(console, "warn").mockImplementation(() => {});
       vrt["buildId"] = "1312";
       vrt["projectId"] = "asd";
       mockedDtoHelper.bufferDtoToFormData.mockImplementation(() => new FormData());
@@ -821,10 +821,11 @@ describe("VisualRegressionTracker", () => {
       expect(thrown).not.toBeInstanceOf(ServerError);
     });
   });
-  it("creates no HTTP agent while the module loads, so browser bundles can import it", () => {
-    const agent = jest.spyOn(http, "Agent");
+  it("creates no HTTP agent while the module loads, so browser bundles can import it", async () => {
+    const agent = vi.spyOn(http, "Agent");
 
-    jest.isolateModules(() => require("./visualRegressionTracker"));
+    vi.resetModules();
+    await import("./visualRegressionTracker");
 
     expect(agent).not.toHaveBeenCalled();
   });

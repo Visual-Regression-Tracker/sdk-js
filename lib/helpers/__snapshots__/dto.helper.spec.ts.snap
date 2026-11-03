@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`bufferDtoToFormData should return form data 1`] = `
+exports[`bufferDtoToFormData > should return form data 1`] = `
 [
   [
     "buildId",
@@ -63,7 +63,7 @@ exports[`bufferDtoToFormData should return form data 1`] = `
 ]
 `;
 
-exports[`bufferDtoToFormData should return form data 2`] = `
+exports[`bufferDtoToFormData > should return form data 2`] = `
 [
   [
     "buildId",
@@ -98,7 +98,7 @@ exports[`bufferDtoToFormData should return form data 2`] = `
 ]
 `;
 
-exports[`multipartDtoToFormData should return form data 1`] = `
+exports[`multipartDtoToFormData > should return form data 1`] = `
 [
   [
     "buildId",
@@ -154,7 +154,7 @@ exports[`multipartDtoToFormData should return form data 1`] = `
 ]
 `;
 
-exports[`multipartDtoToFormData should return form data 2`] = `
+exports[`multipartDtoToFormData > should return form data 2`] = `
 [
   [
     "buildId",
