@@ -4,12 +4,12 @@ import {
   readConfigFromFile,
   validateConfig,
 } from "./config.helper";
-import { mocked } from "jest-mock";
 import { Config } from "../types";
 import * as fs from "fs";
+import type { MockInstance } from "vitest";
 
-jest.mock("fs");
-const mockedFs = mocked(fs);
+vi.mock("fs");
+const mockedFs = vi.mocked(fs);
 
 const initialConfig: Config = {
   apiUrl: "http://localhost:4200",
@@ -22,7 +22,7 @@ const initialConfig: Config = {
 
 describe("config.helper", () => {
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe("readConfigFromFile", () => {
@@ -55,7 +55,7 @@ describe("config.helper", () => {
     });
 
     it("should read deprecated baselineBranchName as sourceBranch", () => {
-      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(console, "warn").mockImplementation(() => {});
       mockedFs.existsSync.mockReturnValueOnce(true);
       mockedFs.readFileSync.mockReturnValueOnce(
         Buffer.from(JSON.stringify({ baselineBranchName: "release" }), "utf8")
@@ -141,7 +141,7 @@ describe("config.helper", () => {
       expect(result.httpTimeoutInSeconds).toBe(0);
     });
     it("should let deprecated VRT_BASELINEBRANCHNAME override sourceBranch from file", () => {
-      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(console, "warn").mockImplementation(() => {});
       process.env = {
         ...process.env,
         VRT_SOURCEBRANCH: undefined,
@@ -183,9 +183,9 @@ describe("config.helper", () => {
       project: "Default project",
       apiKey: "CPKVK4JNK24NVNPNGVFQ853HXXEG",
     };
-    let warnSpy: jest.SpyInstance;
+    let warnSpy: MockInstance;
     beforeEach(() => {
-      warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     });
     afterEach(() => {
       warnSpy.mockRestore();
@@ -217,12 +217,11 @@ describe("config.helper", () => {
       expect(warnSpy).not.toHaveBeenCalled();
     });
 
-    it("should warn about baselineBranchName only once", () => {
-      jest.isolateModules(() => {
-        const helper: typeof import("./config.helper") = require("./config.helper");
-        helper.migrateDeprecatedConfig({ ...baseConfig, baselineBranchName: "a" });
-        helper.migrateDeprecatedConfig({ ...baseConfig, baselineBranchName: "b" });
-      });
+    it("should warn about baselineBranchName only once", async () => {
+      vi.resetModules();
+      const helper = await import("./config.helper");
+      helper.migrateDeprecatedConfig({ ...baseConfig, baselineBranchName: "a" });
+      helper.migrateDeprecatedConfig({ ...baseConfig, baselineBranchName: "b" });
 
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy).toHaveBeenCalledWith(
